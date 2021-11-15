@@ -17,10 +17,8 @@ service User {
 message Empty {}
 
 message UserStruct {
-	string ID = 1;   
-	string Name = 2;
-	string Email = 3;
-	rooms.Status Status = 4;
+	bytes UserInfo = 1;
+	rooms.Status Status = 2;
 }
 
 message GetUsersResponse {

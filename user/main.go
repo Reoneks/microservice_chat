@@ -1,10 +1,10 @@
 package main
 
 import (
-	"proto"
-	"user/config"
-	"user_service/user/repository"
-	"user_service/user/service"
+	"user_service/config"
+	"user_service/user"
+
+	"github.com/Reoneks/microservice_chat/proto"
 
 	"github.com/asim/go-micro/v3"
 )
@@ -16,11 +16,11 @@ func main() {
 		panic(err)
 	}
 
-	userRep := repository.NewUserRepository(db)
-	userService := service.NewUserService(userRep)
+	userRep := user.NewUserRepository(db)
+	userService := user.NewUserService(userRep)
 	microService := micro.NewService(micro.Name(cfg.ServiceName))
 	microService.Init()
-	if err := proto.RegisterUserHandler(microService.Server(), &service.UserMicro{UserService: userService}); err != nil {
+	if err := proto.RegisterUserHandler(microService.Server(), &user.UserMicro{UserService: userService}); err != nil {
 		panic(err)
 	}
 	if err := microService.Run(); err != nil {

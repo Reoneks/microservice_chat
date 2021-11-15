@@ -3,7 +3,8 @@ package user
 import (
 	"context"
 	"encoding/json"
-	"user_service/proto"
+
+	"github.com/Reoneks/microservice_chat/proto"
 )
 
 type UserMicro struct {
