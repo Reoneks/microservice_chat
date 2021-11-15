@@ -1,8 +1,8 @@
 package main
 
 import (
-	"user_service/config"
-	"user_service/user"
+	"github.com/Reoneks/microservice_chat/user/config"
+	"github.com/Reoneks/microservice_chat/user/user"
 
 	"github.com/Reoneks/microservice_chat/proto"
 

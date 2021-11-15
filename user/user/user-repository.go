@@ -1,7 +1,7 @@
 package user
 
 import (
-	"user_service/model"
+	"github.com/Reoneks/microservice_chat/user/model"
 
 	"gorm.io/gorm"
 )

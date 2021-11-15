@@ -1,4 +1,4 @@
-module user_service
+module github.com/Reoneks/microservice_chat/user
 
 go 1.17
 
