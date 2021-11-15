@@ -3,7 +3,6 @@ module github.com/Reoneks/microservice_chat/user
 go 1.17
 
 require (
-	github.com/Reoneks/microservice_chat v0.0.0-20211115084323-0d72e11153b6
 	github.com/asim/go-micro/v3 v3.7.0
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/golang-migrate/migrate/v4 v4.15.1
