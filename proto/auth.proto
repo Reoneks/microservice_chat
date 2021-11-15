@@ -1,0 +1,38 @@
+syntax = "proto3";
+package auth;
+
+import "rooms.proto";
+
+option go_package = ".;proto";
+
+service AuthService {
+    rpc AuthHandler(Token) returns (UserID) {}
+	rpc LoginHandler(LoginRequest) returns (Token) {}
+	rpc Registration(RegistrationRequest) returns (Token) {}
+	rpc Delete(UserID) returns (DeleteUserResponse) {}
+}
+
+message DeleteUserResponse {
+	rooms.Status Status = 1;
+}
+
+message Token {
+	string Token = 1;
+	rooms.Status Status = 2;
+}
+
+message UserID {
+	string UserID = 1;
+	rooms.Status Status = 2;
+}
+
+message LoginRequest {
+	string Email = 1;
+	string Password = 2;
+}
+
+message RegistrationRequest {
+	string Email = 1;
+	string Password = 2;
+	string Name = 3;
+}

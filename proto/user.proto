@@ -1,0 +1,29 @@
+syntax = "proto3";
+package user;
+
+import "auth.proto";
+import "rooms.proto";
+
+option go_package = ".;proto";
+
+service User {
+    rpc GetUserByID(auth.UserID) returns (UserStruct) {}
+	rpc GetUsers(Empty) returns (GetUsersResponse) {}
+	rpc CreateUser(UserStruct) returns (UserStruct) {}
+	rpc UpdateUser(UserStruct) returns (UserStruct) {}
+	rpc DeleteUser(auth.UserID) returns (auth.DeleteUserResponse) {}
+}
+
+message Empty {}
+
+message UserStruct {
+	string ID = 1;   
+	string Name = 2;
+	string Email = 3;
+	rooms.Status Status = 4;
+}
+
+message GetUsersResponse {
+	repeated UserStruct users = 1;
+	rooms.Status Status = 2;
+}
