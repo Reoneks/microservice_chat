@@ -1,28 +1,26 @@
-package repository
+package room_user
 
 import (
-	room "chatex/room/room/room_interface"
-	room_user "chatex/room/room_user/room_user_interface"
-
+	"github.com/Reoneks/microservice_chat/room/model"
 	gm "gorm.io/gorm"
 )
 
 type RoomUsersRepository interface {
-	GetRoomsByUserId(id string) ([]room.RoomsDto, error)
-	CreateUserRoomConnection(user room_user.RoomUsersDto) (*room_user.RoomUsersDto, error)
+	GetRoomsByUserId(id string) ([]model.RoomsDto, error)
+	CreateUserRoomConnection(user model.RoomUsersDto) (*model.RoomUsersDto, error)
 }
 
 type RoomUsersRepositoryImpl struct {
 	db *gm.DB
 }
 
-func (r *RoomUsersRepositoryImpl) GetRoomsByUserId(id string) (rooms []room.RoomsDto, err error) {
-	var roomUsers []room_user.RoomUsersDto
+func (r *RoomUsersRepositoryImpl) GetRoomsByUserId(id string) (rooms []model.RoomsDto, err error) {
+	var roomUsers []model.RoomUsersDto
 	if err = r.db.Where("user_id = ?", id).Find(&roomUsers).Error; err != nil {
 		return
 	}
 	for _, user := range roomUsers {
-		var roomStruct *room.RoomsDto
+		var roomStruct *model.RoomsDto
 		if err = r.db.Where("id = ?", user.RoomID).First(&roomStruct).Error; err != nil {
 			rooms = nil
 			return
@@ -32,7 +30,7 @@ func (r *RoomUsersRepositoryImpl) GetRoomsByUserId(id string) (rooms []room.Room
 	return
 }
 
-func (r *RoomUsersRepositoryImpl) CreateUserRoomConnection(user room_user.RoomUsersDto) (*room_user.RoomUsersDto, error) {
+func (r *RoomUsersRepositoryImpl) CreateUserRoomConnection(user model.RoomUsersDto) (*model.RoomUsersDto, error) {
 	if err := r.db.Create(&user).Error; err != nil {
 		return nil, err
 	}

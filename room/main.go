@@ -1,11 +1,10 @@
 package main
 
 import (
-	"chatex/proto"
-	"chatex/room/config"
-	"chatex/room/room/repository"
-	"chatex/room/room/service"
-	userRep "chatex/room/room_user/repository"
+	"github.com/Reoneks/microservice_chat/proto"
+	"github.com/Reoneks/microservice_chat/room/config"
+	"github.com/Reoneks/microservice_chat/room/room"
+	userRep "github.com/Reoneks/microservice_chat/room/room_user"
 
 	"github.com/asim/go-micro/v3"
 )
@@ -17,15 +16,15 @@ func main() {
 		panic(err)
 	}
 
-	roomRep := repository.NewRoomRepository(db)
+	roomRep := room.NewRoomRepository(db)
 	roomUserRep := userRep.NewRoomUsersRepository(db)
 
-	roomService := service.NewRoomService(roomRep, roomUserRep)
+	roomService := room.NewRoomService(roomRep, roomUserRep)
 	microService := micro.NewService(micro.Name(cfg.ServiceName))
 	microService.Init()
 
 	//TODO: add room handler
-	if err := proto.RegisterRoomsHandler(microService.Server(), &service.RoomsMicro{RoomService: roomService}); err != nil {
+	if err := proto.RegisterRoomsHandler(microService.Server(), &room.RoomsMicro{RoomService: roomService}); err != nil {
 		panic(err)
 	}
 

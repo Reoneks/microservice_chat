@@ -1,17 +1,23 @@
-package repository
+package messages
 
 import (
-	"chatex/messages/messages/messages_interface"
 	"time"
 
+	"github.com/Reoneks/microservice_chat/messages/model"
 	gm "gorm.io/gorm"
 )
+
+type MessagesRepository interface {
+	CreateMessage(message *model.Message) (*model.Message, error)
+	UpdateMessage(message *model.Message) (*model.Message, error)
+	DeleteMessage(id string) error
+}
 
 type MessagesRepositoryImpl struct {
 	db *gm.DB
 }
 
-func (r *MessagesRepositoryImpl) CreateMessage(message *messages_interface.MessagesDto) (*messages_interface.MessagesDto, error) {
+func (r *MessagesRepositoryImpl) CreateMessage(message *model.Message) (*model.Message, error) {
 	message.CreatedAt = time.Now()
 	message.UpdatedAt = time.Now()
 	if err := r.db.Create(&message).Error; err != nil {
@@ -20,8 +26,8 @@ func (r *MessagesRepositoryImpl) CreateMessage(message *messages_interface.Messa
 	return message, nil
 }
 
-func (r *MessagesRepositoryImpl) UpdateMessage(message *messages_interface.MessagesDto) (*messages_interface.MessagesDto, error) {
-	var messages *messages_interface.MessagesDto
+func (r *MessagesRepositoryImpl) UpdateMessage(message *model.Message) (*model.Message, error) {
+	var messages *model.Message
 	if err := r.db.Where("id = ?", message.ID).First(&messages).Error; err != nil {
 		return nil, err
 	}
@@ -34,13 +40,13 @@ func (r *MessagesRepositoryImpl) UpdateMessage(message *messages_interface.Messa
 }
 
 func (r *MessagesRepositoryImpl) DeleteMessage(id string) error {
-	if err := r.db.Delete(&messages_interface.MessagesDto{}, id).Error; err != nil {
+	if err := r.db.Delete(&model.Message{}, id).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-func NewMessagesRepository(db *gm.DB) messages_interface.MessagesRepository {
+func NewMessagesRepository(db *gm.DB) MessagesRepository {
 	return &MessagesRepositoryImpl{
 		db,
 	}

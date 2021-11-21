@@ -3,9 +3,9 @@ package server
 import (
 	"net/url"
 
-	"chatex/api-gateway/clients"
-	"chatex/api-gateway/server/http"
-	"chatex/proto"
+	"github.com/Reoneks/microservice_chat/api-gateway/clients"
+	"github.com/Reoneks/microservice_chat/api-gateway/server/http"
+	"github.com/Reoneks/microservice_chat/proto"
 
 	goMicroHttp "github.com/asim/go-micro/plugins/server/http/v3"
 	"github.com/asim/go-micro/v3"

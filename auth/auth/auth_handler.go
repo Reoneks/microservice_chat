@@ -1,12 +1,11 @@
-package handlers
+package auth
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 
-	"chatex/auth/auth"
-
-	"chatex/proto"
+	"github.com/Reoneks/microservice_chat/proto"
 
 	"github.com/go-chi/jwtauth"
 )
@@ -17,12 +16,12 @@ type LoginRequest struct {
 }
 
 type Auth struct {
-	authService auth.AuthService
+	authService AuthService
 	userService proto.UserService
 	jwt         *jwtauth.JWTAuth
 }
 
-func NewAuth(authService auth.AuthService, userService proto.UserService, jwt *jwtauth.JWTAuth) *Auth {
+func NewAuth(authService AuthService, userService proto.UserService, jwt *jwtauth.JWTAuth) *Auth {
 	return &Auth{
 		authService: authService,
 		userService: userService,
@@ -85,13 +84,19 @@ func (a *Auth) LoginHandler(ctx context.Context, req *proto.LoginRequest, resp *
 }
 
 func (a *Auth) Registration(ctx context.Context, req *proto.RegistrationRequest, resp *proto.Token) (err error) {
-	userResp, err := a.userService.CreateUser(context.Background(), auth.ToUser(req))
+	userResp, err := a.userService.CreateUser(context.Background(), ToUser(req))
 	if err != nil {
 		return err
 	}
 
-	user := auth.ToAuthUser(req)
-	user.ID = userResp.ID
+	var userRespMap map[string]interface{}
+	err = json.Unmarshal(userResp.UserInfo, &userRespMap)
+	if err != nil {
+		return err
+	}
+
+	user := ToAuthUser(req)
+	user.ID = userRespMap["id"].(string)
 
 	resp.Token, err = a.authService.Register(user)
 	if err != nil {

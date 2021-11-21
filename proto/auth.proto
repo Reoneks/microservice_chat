@@ -32,7 +32,7 @@ message LoginRequest {
 }
 
 message RegistrationRequest {
-	string Email = 1;
-	string Password = 2;
-	string Name = 3;
+	string Name = 1;
+	string Email = 2;
+	string Password = 3;
 }

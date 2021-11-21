@@ -11,24 +11,24 @@ type userRepository struct {
 }
 
 type IUserRepository interface {
-	GetUserByID(id string) (map[string]interface{}, error)
-	GetUsers() ([]map[string]interface{}, error)
-	CreateUser(user map[string]interface{}) (map[string]interface{}, error)
-	UpdateUser(user map[string]interface{}) (map[string]interface{}, error)
+	GetUserByID(id string) (*model.User, error)
+	GetUsers() ([]model.User, error)
+	CreateUser(user *model.User) (*model.User, error)
+	UpdateUser(user *model.User) (*model.User, error)
 	DeleteUser(id string) error
 }
 
-func (ur *userRepository) GetUserByID(id string) (result map[string]interface{}, err error) {
+func (ur *userRepository) GetUserByID(id string) (result *model.User, err error) {
 	err = ur.db.First(&result, "id = ?", id).Error
 	return
 }
 
-func (ur *userRepository) GetUsers() (result []map[string]interface{}, err error) {
+func (ur *userRepository) GetUsers() (result []model.User, err error) {
 	err = ur.db.Find(&result).Error
 	return
 }
 
-func (ur *userRepository) CreateUser(user map[string]interface{}) (map[string]interface{}, error) {
+func (ur *userRepository) CreateUser(user *model.User) (*model.User, error) {
 	err := ur.db.Create(&user).Error
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func (ur *userRepository) CreateUser(user map[string]interface{}) (map[string]in
 	return user, nil
 }
 
-func (ur *userRepository) UpdateUser(user map[string]interface{}) (map[string]interface{}, error) {
+func (ur *userRepository) UpdateUser(user *model.User) (*model.User, error) {
 	err := ur.db.Model(&model.User{}).Updates(&user).Error
 	if err != nil {
 		return nil, err

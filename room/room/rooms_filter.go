@@ -1,5 +1,5 @@
 package room
 
 type RoomsFilter struct {
-	Name *string
+	IDs []string
 }

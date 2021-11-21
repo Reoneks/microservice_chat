@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"chatex/proto"
+	"github.com/Reoneks/microservice_chat/proto"
 
 	"github.com/labstack/echo/v4"
 )

@@ -1,11 +1,6 @@
 FROM golang:latest as builder
 
-ARG DOCKER_GIT_CREDENTIALS
-
 WORKDIR /go/src/git.computools.org/golang-team/user-service
-RUN git config --global credential.helper store \
-    && echo "${DOCKER_GIT_CREDENTIALS}" > ~/.git-credentials \
-    && git config --global http.sslverify false
 
 COPY go.mod .
 RUN go mod download

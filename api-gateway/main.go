@@ -1,11 +1,11 @@
 package main
 
 import (
-	"chatex/api-gateway/clients"
-	"chatex/api-gateway/config"
-	"chatex/api-gateway/server"
+	"github.com/Reoneks/microservice_chat/api-gateway/clients"
+	"github.com/Reoneks/microservice_chat/api-gateway/config"
+	"github.com/Reoneks/microservice_chat/api-gateway/server"
 
-	"chatex/proto"
+	"github.com/Reoneks/microservice_chat/proto"
 
 	"github.com/asim/go-micro/v3"
 )

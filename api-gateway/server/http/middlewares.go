@@ -1,10 +1,11 @@
 package http
 
 import (
-	"chatex/proto"
 	"context"
 	"net/http"
 	"strings"
+
+	"github.com/Reoneks/microservice_chat/proto"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"

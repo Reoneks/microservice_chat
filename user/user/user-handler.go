@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/Reoneks/microservice_chat/proto"
+	"github.com/Reoneks/microservice_chat/user/model"
 )
 
 type UserMicro struct {
@@ -60,7 +61,7 @@ func (u *UserMicro) GetUsers(ctx context.Context, req *proto.Empty, rsp *proto.G
 }
 
 func (u *UserMicro) CreateUser(ctx context.Context, req *proto.UserStruct, rsp *proto.UserStruct) error {
-	var data map[string]interface{}
+	var data model.User
 	err := json.Unmarshal(req.UserInfo, &data)
 	if err != nil {
 		rsp.Status.Ok = false
@@ -68,7 +69,7 @@ func (u *UserMicro) CreateUser(ctx context.Context, req *proto.UserStruct, rsp *
 		return err
 	}
 
-	user, err := u.UserService.CreateUser(data)
+	user, err := u.UserService.CreateUser(&data)
 	if err != nil {
 		rsp.Status.Ok = false
 		rsp.Status.Error = err.Error()
@@ -88,7 +89,7 @@ func (u *UserMicro) CreateUser(ctx context.Context, req *proto.UserStruct, rsp *
 }
 
 func (u *UserMicro) UpdateUser(ctx context.Context, req *proto.UserStruct, rsp *proto.UserStruct) error {
-	var data map[string]interface{}
+	var data model.User
 	err := json.Unmarshal(req.UserInfo, &data)
 	if err != nil {
 		rsp.Status.Ok = false
@@ -96,7 +97,7 @@ func (u *UserMicro) UpdateUser(ctx context.Context, req *proto.UserStruct, rsp *
 		return err
 	}
 
-	user, err := u.UserService.UpdateUser(data)
+	user, err := u.UserService.UpdateUser(&data)
 	if err != nil {
 		rsp.Status.Ok = false
 		rsp.Status.Error = err.Error()

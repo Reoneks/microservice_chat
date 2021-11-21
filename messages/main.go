@@ -1,9 +1,8 @@
 package main
 
 import (
-	"chatex/messages/config"
-	"chatex/messages/messages/repository"
-	"chatex/messages/messages/service"
+	"github.com/Reoneks/microservice_chat/messages/config"
+	"github.com/Reoneks/microservice_chat/messages/messages"
 )
 
 func main() {
@@ -13,30 +12,25 @@ func main() {
 		panic(err)
 	}
 
-	rabbitmq, err := config.StartRabbitMQ(cfg.RabbitMQUrl)
+	amqpChan, err := config.StartRabbitMQ(cfg.RabbitMQUrl)
 	if err != nil {
 		panic(err)
 	}
 
-	msgRep := repository.NewMessagesRepository(db)
-	msgService := service.NewMessagesService(msgRep)
+	msgRep := messages.NewMessagesRepository(db)
+	msgService := messages.NewMessagesService(msgRep)
 
-	amqp := config.AmqpSettings{
-		Name:          "messages",
-		Exclusive:     true,
-		PrefetchCount: 1,
-	}
-	queue, err := amqp.GetQueue(rabbitmq)
+	amqp := config.GetAMQP(&cfg, nil, nil)
+	queue, err := amqp.GetQueue(amqpChan)
 	if err != nil {
 		panic(err)
 	}
 
-	micro := service.MessagesMicro{
-		MessagesService: msgService,
-		Ch:              rabbitmq,
-		Q:               &queue,
-		AutoAsk:         true,
+	if err := amqp.SetExchange(amqpChan); err != nil {
+		panic(err)
 	}
+
+	micro := messages.NewMessagesMicro(&cfg, msgService, amqpChan, &queue, nil)
 
 	if err := micro.StartConsumer(); err != nil {
 		panic(err)

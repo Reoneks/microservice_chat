@@ -5,7 +5,6 @@ package proto
 
 import (
 	fmt "fmt"
-	_ "github.com/golang/protobuf/ptypes/timestamp"
 	proto "google.golang.org/protobuf/proto"
 	math "math"
 )

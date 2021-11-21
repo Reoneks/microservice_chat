@@ -2,88 +2,86 @@ package room
 
 import (
 	"errors"
+
+	"github.com/Reoneks/microservice_chat/room/model"
+	room_user "github.com/Reoneks/microservice_chat/room/room_user"
 )
 
-type RoomService interface {
-	GetRoom(id int64) (*Rooms, []Message, error)
-	GetRooms(filter *RoomsFilter) ([]Rooms, error)
-	CreateRoom(room Rooms) (*Rooms, error)
-	DeleteRoom(room_id, userId int64) error
-	UpdateRoom(room Rooms, userId int64) (*Rooms, error)
-	AddUsers(roomId, userId int64, users []int64) (errorsArray error)
-	AddMessage(message Message) (*Message, error)
-	UpdateMessage(message Message) (*Message, error)
-	DeleteMessage(messageId int64) error
+type roomService struct {
+	roomRepository IRoomRepository
+	uRRepository   room_user.RoomUsersRepository
 }
 
-type RoomServiceImpl struct {
-	RoomRepository     RoomRepository
-	uRRepository       RoomUsersRepository
-	messagesRepository MessagesRepository
+type IRoomService interface {
+	GetRoom(id string) (*model.RoomsDto, error)
+	GetRooms(filter *RoomsFilter) ([]model.RoomsDto, error)
+	CreateRoom(room *model.RoomsDto) (*model.RoomsDto, error)
+	DeleteRoom(room_id, userId string) error
+	UpdateRoom(room *model.RoomsDto, userId string) (*model.RoomsDto, error)
+	AddUsers(roomId, userId string, users []string) (errorsArray error)
 }
 
-func (s *RoomServiceImpl) GetRoom(id int64) (*Rooms, []Message, error) {
-	result, Messages, err := s.RoomRepository.GetRoom(id)
-	if err != nil {
-		return nil, nil, err
-	}
-	resultRoom := FromRoomsDto(*result)
-	resultMessages := FromMessagesDtos(Messages)
-	return &resultRoom, resultMessages, nil
-}
-
-func (s *RoomServiceImpl) GetRooms(filter *RoomsFilter) ([]Rooms, error) {
-	result, err := s.RoomRepository.GetRooms(filter)
+func (s *roomService) GetRoom(id string) (*model.RoomsDto, error) {
+	result, err := s.roomRepository.GetRoom(id)
 	if err != nil {
 		return nil, err
 	}
-	resultRooms := FromRoomsDtos(result)
-	return resultRooms, nil
+
+	return result, nil
 }
 
-func (s *RoomServiceImpl) CreateRoom(room Rooms) (*Rooms, error) {
-	result, err := s.RoomRepository.CreateRoom(ToRoomsDto(room))
+func (s *roomService) GetRooms(filter *RoomsFilter) ([]model.RoomsDto, error) {
+	result, err := s.roomRepository.GetRooms(filter)
 	if err != nil {
 		return nil, err
 	}
-	_, err = s.uRRepository.CreateUserRoomConnection(RoomUsersDto{
+
+	return result, nil
+}
+
+func (s *roomService) CreateRoom(room *model.RoomsDto) (*model.RoomsDto, error) {
+	result, err := s.roomRepository.CreateRoom(room)
+	if err != nil {
+		return nil, err
+	}
+	_, err = s.uRRepository.CreateUserRoomConnection(model.RoomUsersDto{
 		UserID: result.CreatedBy,
-		RoomID: result.Id,
+		RoomID: result.ID,
 	})
 	if err != nil {
 		return nil, err
 	}
-	resultMessages := FromRoomsDto(*result)
-	return &resultMessages, nil
+	return result, nil
 }
 
-func (s *RoomServiceImpl) DeleteRoom(Room_id, userId int64) error {
-	result, _, err := s.GetRoom(Room_id)
+func (s *roomService) DeleteRoom(room_id, userId string) error {
+	result, err := s.GetRoom(room_id)
 	if err != nil {
 		return err
 	} else if result.CreatedBy != userId {
 		return errors.New("you are not allowed to do it")
 	}
-	return s.RoomRepository.DeleteRoom(Room_id)
+	return s.roomRepository.DeleteRoom(room_id)
 }
 
-func (s *RoomServiceImpl) UpdateRoom(room Rooms, userId int64) (*Rooms, error) {
-	result, _, err := s.GetRoom(room.Id)
+func (s *roomService) UpdateRoom(room *model.RoomsDto, userId string) (*model.RoomsDto, error) {
+	result, err := s.GetRoom(room.ID)
 	if err != nil {
 		return nil, err
 	} else if result.CreatedBy != userId {
 		return nil, errors.New("you are not allowed to do it")
 	}
-	updateResult, err := s.RoomRepository.UpdateRoom(ToRoomsDto(room))
+
+	updateResult, err := s.roomRepository.UpdateRoom(room)
 	if err != nil {
 		return nil, err
 	}
-	resultRoom := FromRoomsDto(*updateResult)
-	return &resultRoom, nil
+
+	return updateResult, nil
 }
 
-func (s *RoomServiceImpl) AddUsers(roomId, userId int64, users []int64) (err error) {
-	result, _, err := s.GetRoom(roomId)
+func (s *roomService) AddUsers(roomId, userId string, users []string) (err error) {
+	result, err := s.GetRoom(roomId)
 	if err != nil {
 		return
 	} else if result.CreatedBy != userId {
@@ -91,7 +89,7 @@ func (s *RoomServiceImpl) AddUsers(roomId, userId int64, users []int64) (err err
 		return
 	}
 	for _, user := range users {
-		_, err = s.uRRepository.CreateUserRoomConnection(RoomUsersDto{
+		_, err = s.uRRepository.CreateUserRoomConnection(model.RoomUsersDto{
 			UserID: user,
 			RoomID: roomId,
 		})
@@ -102,32 +100,9 @@ func (s *RoomServiceImpl) AddUsers(roomId, userId int64, users []int64) (err err
 	return
 }
 
-func (s *RoomServiceImpl) AddMessage(message Message) (*Message, error) {
-	result, err := s.messagesRepository.CreateMessage(ToMessagesDto(message))
-	if err != nil {
-		return nil, err
-	}
-	resultMessages := FromMessagesDto(*result)
-	return &resultMessages, nil
-}
-
-func (s *RoomServiceImpl) UpdateMessage(message Message) (*Message, error) {
-	result, err := s.messagesRepository.UpdateMessage(ToMessagesDto(message))
-	if err != nil {
-		return nil, err
-	}
-	resultMessages := FromMessagesDto(*result)
-	return &resultMessages, nil
-}
-
-func (s *RoomServiceImpl) DeleteMessage(messageId int64) error {
-	return s.messagesRepository.DeleteMessage(messageId)
-}
-
-func NewRoomService(RoomRepository RoomRepository, uRRepository RoomUsersRepository, messagesRepository MessagesRepository) RoomService {
-	return &RoomServiceImpl{
-		RoomRepository,
+func NewRoomService(roomRepository IRoomRepository, uRRepository room_user.RoomUsersRepository) IRoomService {
+	return &roomService{
+		roomRepository,
 		uRRepository,
-		messagesRepository,
 	}
 }

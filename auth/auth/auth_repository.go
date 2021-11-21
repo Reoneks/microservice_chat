@@ -1,10 +1,13 @@
 package auth
 
-import "github.com/upper/db/v4"
+import (
+	"github.com/Reoneks/microservice_chat/auth/model"
+	"github.com/upper/db/v4"
+)
 
 type AuthRepository interface {
-	GetUserByEmail(email string) (authUser *AuthUserDTO, err error)
-	AddUser(authUser *AuthUserDTO) (*AuthUserDTO, error)
+	GetUserByEmail(email string) (authUser *model.Auth, err error)
+	AddUser(authUser *model.Auth) (*model.Auth, error)
 	DeleteUser(id string) error
 }
 
@@ -20,12 +23,12 @@ func NewAuthRepository(session db.Session) AuthRepository {
 	}
 }
 
-func (auth *AuthRepositoryImpl) GetUserByEmail(email string) (authUser *AuthUserDTO, err error) {
+func (auth *AuthRepositoryImpl) GetUserByEmail(email string) (authUser *model.Auth, err error) {
 	err = auth.session.SQL().SelectFrom(auth.tableName).Where("email = ?", email).One(&authUser)
 	return
 }
 
-func (auth *AuthRepositoryImpl) AddUser(authUser *AuthUserDTO) (*AuthUserDTO, error) {
+func (auth *AuthRepositoryImpl) AddUser(authUser *model.Auth) (*model.Auth, error) {
 	_, err := auth.session.SQL().InsertInto(auth.tableName).Values(authUser).Exec()
 	return authUser, err
 }

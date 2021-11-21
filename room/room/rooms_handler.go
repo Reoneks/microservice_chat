@@ -1,13 +1,15 @@
-package service
+package room
 
 import (
-	"chatex/proto"
-	room "chatex/room/room/room_interface"
 	"context"
+	"encoding/json"
+
+	"github.com/Reoneks/microservice_chat/proto"
+	"github.com/Reoneks/microservice_chat/room/model"
 )
 
 type RoomsMicro struct {
-	RoomService room.RoomService
+	RoomService IRoomService
 }
 
 func (u *RoomsMicro) GetRoom(ctx context.Context, req *proto.RoomID, rsp *proto.RoomStructResponse) error {
@@ -18,31 +20,71 @@ func (u *RoomsMicro) GetRoom(ctx context.Context, req *proto.RoomID, rsp *proto.
 		return err
 	}
 
-	ToRoomsStructRSP(room, rsp)
+	bytes, err := json.Marshal(room)
+	if err != nil {
+		rsp.Status.Ok = false
+		rsp.Status.Error = err.Error()
+		return err
+	}
+
+	rsp.Room.RoomInfo = bytes
+	rsp.Status.Ok = true
 	return nil
 }
 
 func (u *RoomsMicro) GetRooms(ctx context.Context, req *proto.Filter, rsp *proto.GetRoomsResponse) error {
-	rooms, err := u.RoomService.GetRooms(FromFilter(req))
+	rooms, err := u.RoomService.GetRooms(&RoomsFilter{IDs: req.RoomIDs})
 	if err != nil {
 		rsp.Status.Ok = false
 		rsp.Status.Error = err.Error()
 		return err
 	}
 
-	ToRoomsStructsRSP(rooms, rsp)
+	var resp []*proto.RoomStruct
+
+	for _, room := range rooms {
+		bytes, err := json.Marshal(room)
+		if err != nil {
+			rsp.Status.Ok = false
+			rsp.Status.Error = err.Error()
+			return err
+		}
+
+		resp = append(resp, &proto.RoomStruct{
+			RoomInfo: bytes,
+		})
+	}
+
+	rsp.Rooms = resp
+	rsp.Status.Ok = true
 	return nil
 }
 
 func (u *RoomsMicro) CreateRoom(ctx context.Context, req *proto.RoomStruct, rsp *proto.RoomStructResponse) error {
-	room, err := u.RoomService.CreateRoom(FromRoomsStruct(req))
+	var data model.RoomsDto
+	err := json.Unmarshal(req.RoomInfo, &data)
 	if err != nil {
 		rsp.Status.Ok = false
 		rsp.Status.Error = err.Error()
 		return err
 	}
 
-	ToRoomsStructRSP(room, rsp)
+	room, err := u.RoomService.CreateRoom(&data)
+	if err != nil {
+		rsp.Status.Ok = false
+		rsp.Status.Error = err.Error()
+		return err
+	}
+
+	bytes, err := json.Marshal(room)
+	if err != nil {
+		rsp.Status.Ok = false
+		rsp.Status.Error = err.Error()
+		return err
+	}
+
+	rsp.Room.RoomInfo = bytes
+	rsp.Status.Ok = true
 	return nil
 }
 
@@ -59,14 +101,30 @@ func (u *RoomsMicro) DeleteRoom(ctx context.Context, req *proto.DeleteRequest, r
 }
 
 func (u *RoomsMicro) UpdateRoom(ctx context.Context, req *proto.UpdateRequest, rsp *proto.RoomStructResponse) error {
-	room, err := u.RoomService.UpdateRoom(FromRoomsStruct(req.Room), req.UserID)
+	var data model.RoomsDto
+	err := json.Unmarshal(req.Room.RoomInfo, &data)
 	if err != nil {
 		rsp.Status.Ok = false
 		rsp.Status.Error = err.Error()
 		return err
 	}
 
-	ToRoomsStructRSP(room, rsp)
+	room, err := u.RoomService.UpdateRoom(&data, req.UserID)
+	if err != nil {
+		rsp.Status.Ok = false
+		rsp.Status.Error = err.Error()
+		return err
+	}
+
+	bytes, err := json.Marshal(room)
+	if err != nil {
+		rsp.Status.Ok = false
+		rsp.Status.Error = err.Error()
+		return err
+	}
+
+	rsp.Room.RoomInfo = bytes
+	rsp.Status.Ok = true
 	return nil
 }
 

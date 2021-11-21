@@ -1,4 +1,4 @@
-package messages_interface
+package model
 
 import "time"
 
@@ -10,20 +10,14 @@ const (
 	Read   StatusType = 2
 )
 
-func (s StatusType) ToInt64() int64 {
-	return int64(s)
-}
-
-func NewStatusType(i int64) StatusType {
-	return StatusType(i)
-}
-
 type Message struct {
-	ID        int64      `json:"id"`
+	ID        string     `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
 	Text      string     `json:"text"`
 	Status    StatusType `json:"status"`
-	RoomID    int64      `json:"room_id"`
-	CreatedBy int64      `json:"created_by"`
+	RoomID    string     `json:"room_id"`
+	CreatedBy string     `json:"created_by"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
+
+	MessageType string `gorm:"-" json:"message_type"`
 }

@@ -1,11 +1,10 @@
 package main
 
 import (
-	"chatex/auth/auth"
-	"chatex/auth/config"
-	"chatex/auth/handlers"
+	"github.com/Reoneks/microservice_chat/auth/auth"
+	"github.com/Reoneks/microservice_chat/auth/config"
 
-	"chatex/proto"
+	"github.com/Reoneks/microservice_chat/proto"
 
 	promwrapper "github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/v3"
@@ -34,7 +33,7 @@ func main() {
 	service.Init()
 	err = proto.RegisterAuthServiceHandler(
 		service.Server(),
-		handlers.NewAuth(
+		auth.NewAuth(
 			authService,
 			proto.NewUserService(cfg.UserServiceName, service.Client()),
 			jwt,

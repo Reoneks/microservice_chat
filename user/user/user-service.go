@@ -1,18 +1,20 @@
 package user
 
+import "github.com/Reoneks/microservice_chat/user/model"
+
 type userService struct {
 	userRep IUserRepository
 }
 
 type IUserService interface {
-	GetUserByID(id string) (map[string]interface{}, error)
-	GetUsers() ([]map[string]interface{}, error)
-	CreateUser(user map[string]interface{}) (map[string]interface{}, error)
-	UpdateUser(user map[string]interface{}) (map[string]interface{}, error)
+	GetUserByID(id string) (*model.User, error)
+	GetUsers() ([]model.User, error)
+	CreateUser(user *model.User) (*model.User, error)
+	UpdateUser(user *model.User) (*model.User, error)
 	DeleteUser(id string) error
 }
 
-func (us *userService) GetUserByID(id string) (map[string]interface{}, error) {
+func (us *userService) GetUserByID(id string) (*model.User, error) {
 	userDto, err := us.userRep.GetUserByID(id)
 	if err != nil {
 		return nil, err
@@ -20,7 +22,7 @@ func (us *userService) GetUserByID(id string) (map[string]interface{}, error) {
 	return userDto, nil
 }
 
-func (us *userService) GetUsers() ([]map[string]interface{}, error) {
+func (us *userService) GetUsers() ([]model.User, error) {
 	userDto, err := us.userRep.GetUsers()
 	if err != nil {
 		return nil, err
@@ -28,7 +30,7 @@ func (us *userService) GetUsers() ([]map[string]interface{}, error) {
 	return userDto, nil
 }
 
-func (us *userService) CreateUser(user map[string]interface{}) (map[string]interface{}, error) {
+func (us *userService) CreateUser(user *model.User) (*model.User, error) {
 	userDto, err := us.userRep.CreateUser(user)
 	if err != nil {
 		return nil, err
@@ -36,7 +38,7 @@ func (us *userService) CreateUser(user map[string]interface{}) (map[string]inter
 	return userDto, nil
 }
 
-func (us *userService) UpdateUser(user map[string]interface{}) (map[string]interface{}, error) {
+func (us *userService) UpdateUser(user *model.User) (*model.User, error) {
 	userDto, err := us.userRep.UpdateUser(user)
 	if err != nil {
 		return nil, err

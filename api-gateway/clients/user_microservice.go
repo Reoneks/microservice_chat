@@ -2,9 +2,10 @@ package clients
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
-	"chatex/proto"
+	"github.com/Reoneks/microservice_chat/proto"
 
 	"github.com/labstack/echo/v4"
 )
@@ -38,11 +39,18 @@ func (u *UserMicroservice) GetUserByID(ctx echo.Context) error {
 
 func (u *UserMicroservice) UpdateUser(ctx echo.Context) error {
 	var req proto.UserStruct
-	if err := ctx.Bind(&req); err != nil {
+	var user map[string]interface{}
+	var err error
+
+	if err = ctx.Bind(&user); err != nil {
 		return ctx.NoContent(http.StatusBadRequest)
 	}
 
-	req.ID = ctx.Get("user_id").(string)
+	user["id"] = ctx.Get("user_id").(string)
+	req.UserInfo, err = json.Marshal(user)
+	if err != nil {
+		return ctx.NoContent(http.StatusInternalServerError)
+	}
 
 	rsp, err := u.user.UpdateUser(context.Background(), &req)
 	if err != nil {

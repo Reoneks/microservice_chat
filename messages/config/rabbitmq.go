@@ -11,7 +11,7 @@ func StartRabbitMQ(url string) (*amqp.Channel, error) {
 	return conn.Channel()
 }
 
-type AmqpSettings struct {
+type amqpSettings struct {
 	//& Queue
 	Name             string     //^ messages
 	Durable          bool       //^ false
@@ -24,9 +24,59 @@ type AmqpSettings struct {
 	PrefetchCount int  //^ 1
 	PrefetchSize  int  //^ 0
 	Global        bool //^ false
+
+	//& ExchangeDeclare
+	ExchangeName      string //^ messages-gateway
+	Type              string //^ fanout
+	ExchangeDurable   bool   //^ true
+	AutoDelete        bool   //^ false
+	Internal          bool   //^ false
+	ExchangeNoWait    bool   //^ false
+	ExchangeArguments amqp.Table
 }
 
-func (s *AmqpSettings) SetQoS(ch *amqp.Channel) error {
+type IAMQP interface {
+	SetQoS(ch *amqp.Channel) error
+	GetQueue(ch *amqp.Channel) (amqp.Queue, error)
+	SetExchange(ch *amqp.Channel) error
+}
+
+func GetAMQP(cfg *Config, Arguments, ExchangeArguments amqp.Table) IAMQP {
+	return &amqpSettings{
+		Name:             cfg.Name,
+		Durable:          cfg.Durable,
+		DeleteWhenUnused: cfg.DeleteWhenUnused,
+		Exclusive:        cfg.QueueExclusive,
+		NoWait:           cfg.QueueNoWait,
+		Arguments:        Arguments,
+
+		PrefetchCount: cfg.PrefetchCount,
+		PrefetchSize:  cfg.PrefetchSize,
+		Global:        cfg.Global,
+
+		ExchangeName:      cfg.Exchange,
+		Type:              cfg.Type,
+		ExchangeDurable:   cfg.ExchangeDurable,
+		AutoDelete:        cfg.AutoDelete,
+		Internal:          cfg.Internal,
+		ExchangeNoWait:    cfg.ExchangeNoWait,
+		ExchangeArguments: ExchangeArguments,
+	}
+}
+
+func (s *amqpSettings) SetExchange(ch *amqp.Channel) error {
+	return ch.ExchangeDeclare(
+		s.ExchangeName,      // name
+		s.Type,              // type
+		s.ExchangeDurable,   // durable
+		s.AutoDelete,        // auto-deleted
+		s.Internal,          // internal
+		s.ExchangeNoWait,    // no-wait
+		s.ExchangeArguments, // arguments
+	)
+}
+
+func (s *amqpSettings) SetQoS(ch *amqp.Channel) error {
 	return ch.Qos(
 		s.PrefetchCount,
 		s.PrefetchSize,
@@ -34,7 +84,7 @@ func (s *AmqpSettings) SetQoS(ch *amqp.Channel) error {
 	)
 }
 
-func (aq *AmqpSettings) GetQueue(ch *amqp.Channel) (amqp.Queue, error) {
+func (aq *amqpSettings) GetQueue(ch *amqp.Channel) (amqp.Queue, error) {
 	return ch.QueueDeclare(
 		aq.Name,
 		aq.Durable,

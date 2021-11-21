@@ -1,8 +1,6 @@
 syntax = "proto3";
 package rooms;
 
-import "google/protobuf/timestamp.proto";
-
 option go_package = ".;proto";
 
 service Rooms {
@@ -19,11 +17,7 @@ message RoomID {
 }
 
 message RoomStruct {
-	string ID = 1;
-	string Name = 2;
-	int64 Status = 3;
-	string CreatedBy = 4;
-	google.protobuf.Timestamp CreatedAt = 5;
+	bytes RoomInfo = 1;
 }
 
 message Filter {

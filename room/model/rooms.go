@@ -1,4 +1,4 @@
-package room
+package model
 
 import (
 	"time"
