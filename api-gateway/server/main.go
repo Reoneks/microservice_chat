@@ -67,6 +67,8 @@ func (s *httpServer) Start() error {
 	private := router.Group("/client")
 	private.Use(http.Authorization(s.auth))
 	{
+		private.GET("/ws", clients.WSHandler())
+
 		private.GET("/users", s.userMicroservice.GetUsers)
 		private.PUT("/user", s.userMicroservice.UpdateUser)
 		private.DELETE("/user", s.userMicroservice.DeleteUser)

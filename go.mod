@@ -10,10 +10,8 @@ require (
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/go-chi/jwtauth v1.2.0
 	github.com/golang-migrate/migrate/v4 v4.15.1
-	github.com/golang/protobuf v1.5.2
 	github.com/joho/godotenv v1.4.0
 	github.com/labstack/echo/v4 v4.6.1
-	github.com/mitchellh/mapstructure v1.4.2
 	github.com/sirupsen/logrus v1.8.1
 	github.com/streadway/amqp v1.0.0
 	github.com/upper/db/v4 v4.2.1
@@ -22,6 +20,8 @@ require (
 	gorm.io/driver/postgres v1.2.2
 	gorm.io/gorm v1.22.3
 )
+
+require github.com/golang/protobuf v1.5.2 // indirect
 
 require (
 	github.com/Microsoft/go-winio v0.5.0 // indirect

@@ -1,9 +1,13 @@
 package connector
 
 import (
+	"encoding/json"
 	"sync"
 
+	"github.com/Reoneks/microservice_chat/api-gateway/config"
+	"github.com/Reoneks/microservice_chat/api-gateway/model"
 	"github.com/sirupsen/logrus"
+	"github.com/streadway/amqp"
 )
 
 type Connector interface {
@@ -16,6 +20,14 @@ type WSConnectorImpl struct {
 
 	log   *logrus.Entry
 	rooms map[string]*RoomConnections
+	msgs  <-chan amqp.Delivery
+
+	ch *amqp.Channel
+
+	//& publish
+	qSendName string
+	mandatory bool //^ false
+	immediate bool //^ false
 }
 
 func (c *WSConnectorImpl) AddConnection(conn Connection) {
@@ -24,7 +36,7 @@ func (c *WSConnectorImpl) AddConnection(conn Connection) {
 
 func (c *WSConnectorImpl) SendMessageByRoom(roomID string, data interface{}) {
 	if c.rooms[roomID] == nil {
-		c.log.Error("connector 32: room is nil")
+		c.log.Error("connector: room is nil")
 		return
 	}
 	room := *c.rooms[roomID]
@@ -41,7 +53,7 @@ func (c *WSConnectorImpl) connect(conn Connection) {
 
 func (c *WSConnectorImpl) disconnect(conn Connection) {
 	if c.rooms[conn.GetCurrentRoom()] == nil {
-		c.log.Error("connector 32: room is nil")
+		c.log.Error("connector: room is nil")
 		return
 	}
 	room := *c.rooms[conn.GetCurrentRoom()]
@@ -55,13 +67,28 @@ func (c *WSConnectorImpl) listen(conn Connection) {
 			c.onEventMessage(conn, msg)
 		case <-conn.GetDisconnectChan():
 			c.disconnect(conn)
+		case msg := <-c.msgs:
+			var message model.Message
+
+			err := json.Unmarshal(msg.Body, &message)
+			if err != nil {
+				c.log.Error(err)
+				continue
+			}
+
+			c.SendMessageByRoom(message.RoomID, message)
 		}
 	}
 }
 
-func NewWSConnector(log *logrus.Entry) Connector {
+func NewWSConnector(log *logrus.Entry, ch *amqp.Channel, cfg *config.Config, msgs <-chan amqp.Delivery) Connector {
 	return &WSConnectorImpl{
-		log:   log,
-		rooms: map[string]*RoomConnections{},
+		log:       log,
+		rooms:     map[string]*RoomConnections{},
+		msgs:      msgs,
+		ch:        ch,
+		qSendName: cfg.SendName,
+		mandatory: cfg.Mandatory,
+		immediate: cfg.Immediate,
 	}
 }

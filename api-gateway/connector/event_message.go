@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/Reoneks/microservice_chat/api-gateway/model"
+	"github.com/streadway/amqp"
 )
 
 type EventType int64
@@ -86,16 +87,32 @@ func (c *WSConnectorImpl) onEventMessage(conn Connection, msg []byte) {
 	//! //////////////////////////////////
 	case NewMessageEventType:
 		message := model.Message{
-			Text:      message.Data,
-			Status:    1,
-			RoomID:    conn.GetCurrentRoom(),
-			CreatedBy: conn.GetUser().ID,
+			Text:        message.Data,
+			Status:      1,
+			RoomID:      conn.GetCurrentRoom(),
+			CreatedBy:   conn.GetUser().ID,
+			MessageType: "create",
 		}
-		savedMessage, err := c.roomService.AddMessage(message)
+
+		bytes, err := json.Marshal(message)
 		if err != nil {
 			c.log.Error(err)
 			return
 		}
-		c.SendMessageByRoom(conn.GetCurrentRoom(), savedMessage)
+
+		err = c.ch.Publish(
+			"",
+			c.qSendName,
+			c.mandatory,
+			c.immediate,
+			amqp.Publishing{
+				ContentType: "application/json",
+				Body:        []byte(bytes),
+			},
+		)
+		if err != nil {
+			c.log.Error(err)
+			return
+		}
 	}
 }
