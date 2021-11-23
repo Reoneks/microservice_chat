@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/Reoneks/microservice_chat/messages/config"
 	"github.com/Reoneks/microservice_chat/messages/messages"
+	"github.com/Reoneks/microservice_chat/proto"
+	"github.com/asim/go-micro/v3"
 )
 
 func main() {
@@ -30,9 +32,24 @@ func main() {
 		panic(err)
 	}
 
-	micro := messages.NewMessagesMicro(&cfg, msgService, amqpChan, &queue, nil)
+	rabbitMicro := messages.NewMessagesMicro(&cfg, msgService, amqpChan, &queue, nil)
+	microService := micro.NewService(micro.Name(cfg.ServiceName))
+	microService.Init()
 
-	if err := micro.StartConsumer(); err != nil {
+	if err := proto.RegisterMessagesHandler(
+		microService.Server(),
+		&messages.MessagesMicro{MessagesService: msgService},
+	); err != nil {
+		panic(err)
+	}
+
+	go func() {
+		if err := rabbitMicro.StartConsumer(); err != nil {
+			panic(err)
+		}
+	}()
+
+	if err := microService.Run(); err != nil {
 		panic(err)
 	}
 }

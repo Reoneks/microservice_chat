@@ -18,7 +18,7 @@ type Connector interface {
 type WSConnectorImpl struct {
 	sync.RWMutex
 
-	log   *logrus.Entry
+	log   *logrus.Logger
 	rooms map[string]*RoomConnections
 	msgs  <-chan amqp.Delivery
 
@@ -81,7 +81,7 @@ func (c *WSConnectorImpl) listen(conn Connection) {
 	}
 }
 
-func NewWSConnector(log *logrus.Entry, ch *amqp.Channel, cfg *config.Config, msgs <-chan amqp.Delivery) Connector {
+func NewWSConnector(log *logrus.Logger, ch *amqp.Channel, cfg *config.Config, msgs <-chan amqp.Delivery) Connector {
 	return &WSConnectorImpl{
 		log:       log,
 		rooms:     map[string]*RoomConnections{},

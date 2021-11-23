@@ -9,12 +9,14 @@ import (
 )
 
 type Config struct {
-	Addr     string `env:"HTTP_SERVER_ADDRESS" envDefault:"0.0.0.0:1138"`
-	LogLevel string `env:"API_LOG_LEVEL" envDefault:"info"`
+	Addr        string `env:"HTTP_SERVER_ADDRESS" envDefault:"0.0.0.0:1138"`
+	LogLevel    string `env:"API_LOG_LEVEL" envDefault:"info"`
+	RabbitMQUrl string `env:"RABBIT_MQ_URL" envDefault:"amqp://guest:guest@localhost:5672/"`
 
-	UserServiceName string `env:"USER_SERVICE_NAME" envDefault:"user-service"`
-	AuthServiceName string `env:"AUTH_SERVICE_NAME" envDefault:"auth-service"`
-	RoomServiceName string `env:"ROOM_SERVICE_NAME" envDefault:"room-service"`
+	UserServiceName    string `env:"USER_SERVICE_NAME" envDefault:"user-service"`
+	AuthServiceName    string `env:"AUTH_SERVICE_NAME" envDefault:"auth-service"`
+	RoomServiceName    string `env:"ROOM_SERVICE_NAME" envDefault:"room-service"`
+	MessageServiceName string `env:"MESSAGE_SERVICE_NAME" envDefault:"messages-service"`
 
 	ApiGatewaySubscribeName string `env:"API_GATEWAY_SUBSCRIBE_CHANNEL_NAME" envDefault:"ApiGatewayResp"`
 

@@ -1,11 +1,13 @@
 package messages
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 
 	"github.com/Reoneks/microservice_chat/messages/config"
 	"github.com/Reoneks/microservice_chat/messages/model"
+	"github.com/Reoneks/microservice_chat/proto"
 
 	"github.com/streadway/amqp"
 )
@@ -153,5 +155,33 @@ func (u *messagesMicro) StartConsumer() error {
 		}
 	}
 
+	return nil
+}
+
+type MessagesMicro struct {
+	MessagesService MessagesService
+}
+
+func (u *MessagesMicro) GetMessagesByRoom(
+	ctx context.Context,
+	req *proto.MessageID,
+	rsp *proto.GetMessagesByRoomResponse,
+) error {
+	messages, err := u.MessagesService.GetMessagesByRoom(req.ID, int(req.Limit), int((req.Page-1)*req.Limit))
+	if err != nil {
+		rsp.Status.Ok = false
+		rsp.Status.Error = err.Error()
+		return err
+	}
+
+	bytes, err := json.Marshal(messages)
+	if err != nil {
+		rsp.Status.Ok = false
+		rsp.Status.Error = err.Error()
+		return err
+	}
+
+	rsp.Messages = bytes
+	rsp.Status.Ok = true
 	return nil
 }

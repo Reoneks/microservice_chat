@@ -4,13 +4,11 @@ import (
 	"net/url"
 
 	"github.com/Reoneks/microservice_chat/api-gateway/clients"
+	"github.com/Reoneks/microservice_chat/api-gateway/connector"
 	"github.com/Reoneks/microservice_chat/api-gateway/server/http"
 	"github.com/Reoneks/microservice_chat/proto"
+	"github.com/gorilla/websocket"
 
-	goMicroHttp "github.com/asim/go-micro/plugins/server/http/v3"
-	"github.com/asim/go-micro/v3"
-	"github.com/asim/go-micro/v3/registry"
-	"github.com/asim/go-micro/v3/server"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
@@ -26,8 +24,11 @@ type httpServer struct {
 	authMicroservice        *clients.AuthMicroservice
 	userMicroservice        *clients.UserMicroservice
 	roomMicroservice        *clients.RoomMicroservice
+	messagesMicroservice    *clients.MessagesMicroservice
 	auth                    proto.AuthService
 	apiGatewaySubscribeName string
+	connect                 connector.Connector
+	upgrader                *websocket.Upgrader
 }
 
 func NewHTTPServer(
@@ -36,8 +37,11 @@ func NewHTTPServer(
 	authMicroservice *clients.AuthMicroservice,
 	userMicroservice *clients.UserMicroservice,
 	roomMicroservice *clients.RoomMicroservice,
+	messagesMicroservice *clients.MessagesMicroservice,
 	auth proto.AuthService,
 	apiGatewaySubscribeName string,
+	connect connector.Connector,
+	upgrader *websocket.Upgrader,
 ) HTTPServer {
 	return &httpServer{
 		log:                     log,
@@ -45,17 +49,15 @@ func NewHTTPServer(
 		authMicroservice:        authMicroservice,
 		userMicroservice:        userMicroservice,
 		roomMicroservice:        roomMicroservice,
+		messagesMicroservice:    messagesMicroservice,
 		apiGatewaySubscribeName: apiGatewaySubscribeName,
 		auth:                    auth,
+		connect:                 connect,
+		upgrader:                upgrader,
 	}
 }
 
 func (s *httpServer) Start() error {
-	srv := goMicroHttp.NewServer(
-		server.Name("Api-Gateway"),
-		server.Address(s.url.Host),
-	)
-
 	router := echo.New()
 	router.Use(http.LoggerMiddleware())
 	router.Use(http.CorsMiddleware())
@@ -67,7 +69,8 @@ func (s *httpServer) Start() error {
 	private := router.Group("/client")
 	private.Use(http.Authorization(s.auth))
 	{
-		private.GET("/ws", clients.WSHandler())
+		private.GET("/ws", clients.WSHandler(s.connect, s.upgrader))
+		private.GET("/messages", s.messagesMicroservice.GetMessagesByRoom)
 
 		private.GET("/users", s.userMicroservice.GetUsers)
 		private.PUT("/user", s.userMicroservice.UpdateUser)
@@ -82,15 +85,5 @@ func (s *httpServer) Start() error {
 		private.GET("/room/:id", s.roomMicroservice.GetRoom)
 	}
 
-	hd := srv.NewHandler(router)
-	if err := srv.Handle(hd); err != nil {
-		return err
-	}
-
-	service := micro.NewService(
-		micro.Server(srv),
-		micro.Registry(registry.NewRegistry()),
-	)
-	service.Init()
-	return service.Run()
+	return router.Start(s.url.String())
 }

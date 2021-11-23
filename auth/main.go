@@ -6,7 +6,6 @@ import (
 
 	"github.com/Reoneks/microservice_chat/proto"
 
-	promwrapper "github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/v3"
 )
 
@@ -23,13 +22,7 @@ func main() {
 	authRepository := auth.NewAuthRepository(db)
 	authService := auth.NewAuthService(authRepository, jwt)
 
-	service := micro.NewService(
-		micro.Name(cfg.ServiceName),
-		micro.WrapHandler(promwrapper.NewHandlerWrapper(
-			promwrapper.ServiceName(cfg.ServiceName),
-			promwrapper.ServiceID("auth"),
-		)),
-	)
+	service := micro.NewService(micro.Name(cfg.ServiceName))
 	service.Init()
 	err = proto.RegisterAuthServiceHandler(
 		service.Server(),

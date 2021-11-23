@@ -1,0 +1,21 @@
+syntax = "proto3";
+package rooms;
+
+import "rooms.proto";
+
+option go_package = ".;proto";
+
+service Messages {
+    rpc GetMessagesByRoom(MessageID) returns (GetMessagesByRoomResponse) {}
+}
+
+message MessageID {
+	string ID = 1;
+	int32 Limit = 2;
+	int32 Page = 3;
+}
+
+message GetMessagesByRoomResponse{
+	bytes Messages = 1;
+	rooms.Status Status = 2;
+}

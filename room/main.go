@@ -23,7 +23,6 @@ func main() {
 	microService := micro.NewService(micro.Name(cfg.ServiceName))
 	microService.Init()
 
-	//TODO: add room handler
 	if err := proto.RegisterRoomsHandler(microService.Server(), &room.RoomsMicro{RoomService: roomService}); err != nil {
 		panic(err)
 	}

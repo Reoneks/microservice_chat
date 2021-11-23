@@ -8,6 +8,7 @@ import (
 )
 
 type MessagesRepository interface {
+	GetMessagesByRoom(roomID string, limit, offset int) ([]model.Message, error)
 	CreateMessage(message *model.Message) (*model.Message, error)
 	UpdateMessage(message *model.Message) (*model.Message, error)
 	DeleteMessage(id string) error
@@ -15,6 +16,15 @@ type MessagesRepository interface {
 
 type MessagesRepositoryImpl struct {
 	db *gm.DB
+}
+
+func (r *MessagesRepositoryImpl) GetMessagesByRoom(
+	roomID string,
+	limit,
+	offset int,
+) (messages []model.Message, err error) {
+	err = r.db.Limit(limit).Offset(offset).Where("room_id = ?", roomID).Find(&messages).Error
+	return
 }
 
 func (r *MessagesRepositoryImpl) CreateMessage(message *model.Message) (*model.Message, error) {

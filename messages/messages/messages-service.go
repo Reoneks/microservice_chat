@@ -7,25 +7,22 @@ type messagesService struct {
 }
 
 type MessagesService interface {
+	GetMessagesByRoom(roomID string, limit, offset int) ([]model.Message, error)
 	CreateMessage(message *model.Message) (*model.Message, error)
 	UpdateMessage(message *model.Message) (*model.Message, error)
 	DeleteMessage(id string) error
 }
 
+func (us *messagesService) GetMessagesByRoom(roomID string, limit, offset int) ([]model.Message, error) {
+	return us.messagesService.GetMessagesByRoom(roomID, limit, offset)
+}
+
 func (us *messagesService) CreateMessage(message *model.Message) (*model.Message, error) {
-	userDto, err := us.messagesService.CreateMessage(message)
-	if err != nil {
-		return nil, err
-	}
-	return userDto, nil
+	return us.messagesService.CreateMessage(message)
 }
 
 func (us *messagesService) UpdateMessage(message *model.Message) (*model.Message, error) {
-	upMessage, err := us.messagesService.UpdateMessage(message)
-	if err != nil {
-		return nil, err
-	}
-	return upMessage, nil
+	return us.messagesService.UpdateMessage(message)
 }
 
 func (us *messagesService) DeleteMessage(id string) error {
