@@ -9,7 +9,7 @@ import (
 
 func main() {
 	cfg := config.GetConfig()
-	db, err := config.NewDB(cfg.DSN)
+	db, err := config.NewDB(cfg.DSN, cfg.MigrationURL)
 	if err != nil {
 		panic(err)
 	}

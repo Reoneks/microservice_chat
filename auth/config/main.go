@@ -17,7 +17,7 @@ import (
 type Config struct {
 	ServiceName  string `env:"SERVICE_NAME" envDefault:"auth-service"`
 	LogLevel     string `env:"API_LOG_LEVEL" envDefault:"info"`
-	DSN          string `env:"DB_DSN" envDefault:"host=0.0.0.0 user=postgres password=postgres dbname=go-micro-template-user-service port=5432 sslmode=disable"`
+	DSN          string `env:"DB_DSN" envDefault:"host=0.0.0.0 user=postgres password=postgres dbname=analytics port=5433 sslmode=disable"`
 	MigrationURL string `env:"DB_MIGRATION_URL" envDefault:"file://auth/migrations"`
 
 	Secret    string `env:"JWT_SECRET" envDefault:"9caf06bb4436cdbfa20af9121a626bc1093c4f54b31c0fa937957856135345b6"`

@@ -15,7 +15,7 @@ import (
 )
 
 type Config struct {
-	DSN          string `env:"DB_DSN" envDefault:"host=0.0.0.0 user=postgres password=postgres dbname=room-service port=5432 sslmode=disable"`
+	DSN          string `env:"DB_DSN" envDefault:"host=0.0.0.0 user=postgres password=postgres dbname=analytics port=5433 sslmode=disable"`
 	ServiceName  string `env:"SERVICE_NAME" envDefault:"room-service"`
 	MigrationURL string `env:"DB_MIGRATION_URL" envDefault:"file://room/migrations"`
 }
