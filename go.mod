@@ -18,7 +18,10 @@ require (
 	gorm.io/gorm v1.22.3
 )
 
-require github.com/golang/protobuf v1.5.2 // indirect
+require (
+	github.com/favadi/protoc-go-inject-tag v1.3.0 // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
+)
 
 require (
 	github.com/Microsoft/go-winio v0.5.0 // indirect

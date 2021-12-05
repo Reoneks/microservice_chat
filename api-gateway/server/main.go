@@ -63,6 +63,7 @@ func (s *httpServer) Start() error {
 	router.Use(http.CorsMiddleware())
 	router.Use(middleware.Recover())
 
+	router.Static("/", "./public")
 	router.POST("/registration", s.authMicroservice.Register)
 	router.POST("/login", s.authMicroservice.Login)
 
@@ -78,8 +79,8 @@ func (s *httpServer) Start() error {
 		private.GET("/user/:id", s.userMicroservice.GetUserByID)
 
 		private.GET("/rooms", s.roomMicroservice.GetRooms)
-		private.POST("/room", s.roomMicroservice.CreateRoom)
-		private.PUT("/room", s.roomMicroservice.UpdateRoom)
+		private.POST("/rooms", s.roomMicroservice.CreateRoom)
+		private.PUT("/rooms", s.roomMicroservice.UpdateRoom)
 		private.DELETE("/room", s.roomMicroservice.DeleteRoom)
 		private.GET("/add_users", s.roomMicroservice.AddUsers)
 		private.GET("/room/:id", s.roomMicroservice.GetRoom)
