@@ -4,20 +4,19 @@ import (
 	"github.com/Reoneks/microservice_chat/proto"
 	"github.com/Reoneks/microservice_chat/room/config"
 	"github.com/Reoneks/microservice_chat/room/room"
-	userRep "github.com/Reoneks/microservice_chat/room/room_user"
 
 	"github.com/asim/go-micro/v3"
 )
 
 func main() {
 	cfg := config.GetConfig()
-	db, err := config.NewDB(cfg.DSN, cfg.MigrationURL)
+	db, err := config.NewDB(cfg.MongoUrl)
 	if err != nil {
 		panic(err)
 	}
 
-	roomRep := room.NewRoomRepository(db)
-	roomUserRep := userRep.NewRoomUsersRepository(db)
+	roomRep := room.NewRoomRepository(db, cfg.DBName, cfg.RoomCollection)
+	roomUserRep := room.NewRoomUsersRepository(db, cfg.DBName, cfg.RoomUserCollection, cfg.RoomCollection)
 
 	roomService := room.NewRoomService(roomRep, roomUserRep)
 	microService := micro.NewService(micro.Name(cfg.ServiceName))

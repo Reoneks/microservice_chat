@@ -1,18 +1,12 @@
 version: '3.7'
 
 services:
-  analytics:
-    image: postgres:latest
-    container_name: analytics
-    ports:
-      - '5433:5432'
+  mongodb:
+    image: mongo
+    container_name: mongodb
     restart: always
-    volumes:
-      - ./tmp/db/data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: analytics
+    ports:
+      - 27017:27017
       
   rabbitmq:
     image: rabbitmq:3-management-alpine

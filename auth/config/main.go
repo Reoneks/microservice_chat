@@ -1,70 +1,33 @@
 package config
 
 import (
-	"database/sql"
+	"context"
 	"sync"
 
 	"github.com/caarlos0/env"
-	"github.com/golang-migrate/migrate/v4"
-	mpostgres "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/upper/db/v4"
-	"github.com/upper/db/v4/adapter/postgresql"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	ServiceName  string `env:"SERVICE_NAME" envDefault:"auth-service"`
-	LogLevel     string `env:"API_LOG_LEVEL" envDefault:"info"`
-	DSN          string `env:"DB_DSN" envDefault:"host=0.0.0.0 user=postgres password=postgres dbname=analytics port=5433 sslmode=disable"`
-	MigrationURL string `env:"DB_MIGRATION_URL" envDefault:"file://auth/migrations"`
+	ServiceName         string `env:"SERVICE_NAME" envDefault:"auth-service"`
+	LogLevel            string `env:"API_LOG_LEVEL" envDefault:"info"`
+	MicroServiceAddress string `env:"MICRO_SERVICE_ADDRESS" envDefault:"localhost:16565"`
+	MongoUrl            string `env:"MONGO_URL"`
+	DBName              string `env:"MONGO_DB_NAME"`
+	Collection          string `env:"MONGO_COLLECTION_NAME"`
 
 	Secret    string `env:"JWT_SECRET" envDefault:"9caf06bb4436cdbfa20af9121a626bc1093c4f54b31c0fa937957856135345b6"`
 	Algorithm string `env:"JWT_ALGORITHM" envDefault:"HS256"`
 
-	UserServiceName string `env:"USER_SERVICE_NAME" envDefault:"auth-service"`
+	UserServiceName string `env:"USER_SERVICE_NAME" envDefault:"user-service"`
+	UserServiceADDR string `env:"USER_SERVICE_ADDR" envDefault:"localhost:16564"`
 }
 
-func NewDB(dsn, migrationsURL string) (db.Session, error) {
-	if err := migrations(dsn, migrationsURL); err != nil && err != migrate.ErrNoChange {
-		return nil, err
-	}
-
-	settings, err := postgresql.ParseURL(dsn)
-	if err != nil {
-		return nil, err
-	}
-
-	session, err := postgresql.Open(settings)
-	if err != nil {
-		return nil, err
-	}
-
-	return session, nil
-}
-
-func migrations(dsn, migrationsURL string) error {
-	db, err := sql.Open("postgres", dsn)
-	if err != nil {
-		return err
-	}
-
-	driver, err := mpostgres.WithInstance(db, &mpostgres.Config{})
-	if err != nil {
-		return err
-	}
-
-	m, err := migrate.NewWithDatabaseInstance(
-		migrationsURL,
-		"postgres",
-		driver,
-	)
-	if err != nil {
-		return err
-	}
-
-	return m.Up()
+func NewDB(mongoURL string) (*mongo.Client, error) {
+	return mongo.Connect(context.Background(), options.Client().ApplyURI(mongoURL))
 }
 
 var (

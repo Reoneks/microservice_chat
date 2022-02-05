@@ -46,7 +46,7 @@ func (u *UserMicroservice) UpdateUser(ctx echo.Context) error {
 		return ctx.NoContent(http.StatusBadRequest)
 	}
 
-	user["id"] = ctx.Get("user_id").(string)
+	user["_id"] = ctx.Get("user_id").(string)
 	req.UserInfo, err = json.Marshal(user)
 	if err != nil {
 		return ctx.NoContent(http.StatusInternalServerError)

@@ -1,73 +1,71 @@
 package room
 
 import (
-	"strings"
+	"context"
+	"fmt"
+	"time"
 
-	"github.com/Reoneks/microservice_chat/room/model"
-
-	gm "gorm.io/gorm"
+	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type roomRepository struct {
-	db *gm.DB
+	roomsCollection *mongo.Collection
+	ctx             context.Context
 }
 
 type IRoomRepository interface {
-	GetRoom(id string) (*model.RoomsDto, error)
-	CreateRoom(user *model.RoomsDto) (*model.RoomsDto, error)
-	UpdateRoom(user *model.RoomsDto) (*model.RoomsDto, error)
+	GetRoom(id string) (map[string]interface{}, error)
+	CreateRoom(user map[string]interface{}) (map[string]interface{}, error)
+	UpdateRoom(user map[string]interface{}) (map[string]interface{}, error)
 	DeleteRoom(id string) error
-	GetRooms(filter *RoomsFilter) ([]model.RoomsDto, error)
 }
 
-func (r *roomRepository) GetRoom(id string) (*model.RoomsDto, error) {
-	room := &model.RoomsDto{}
-	if err := r.db.Where("id = ?", id).First(room).Error; err != nil {
-		return nil, err
+func (r *roomRepository) GetRoom(id string) (map[string]interface{}, error) {
+	filter := bson.M{"_id": id}
+
+	var room map[string]interface{}
+	err := r.roomsCollection.FindOne(r.ctx, filter).Decode(&room)
+	if err != nil {
+		return nil, fmt.Errorf("FindOne error:\n\t%v", err)
 	}
+
 	return room, nil
 }
 
-func (r *roomRepository) CreateRoom(room *model.RoomsDto) (*model.RoomsDto, error) {
-	if err := r.db.Create(&room).Error; err != nil {
-		return nil, err
+func (r *roomRepository) CreateRoom(room map[string]interface{}) (map[string]interface{}, error) {
+	room["_id"] = uuid.New().String()
+	room["created_at"] = time.Now()
+	room["updated_at"] = time.Now()
+
+	_, err := r.roomsCollection.InsertOne(r.ctx, room)
+	if err != nil {
+		return nil, fmt.Errorf("CreateRoom error:\n\t%v", err)
 	}
+
 	return room, nil
 }
 
-func (r *roomRepository) UpdateRoom(room *model.RoomsDto) (*model.RoomsDto, error) {
-	if err := r.db.Save(&room).Error; err != nil {
-		return nil, err
+func (r *roomRepository) UpdateRoom(room map[string]interface{}) (map[string]interface{}, error) {
+	room["updated_at"] = time.Now()
+
+	filter := bson.M{"_id": room["_id"]}
+	update := bson.M{"$set": room}
+	_, err := r.roomsCollection.UpdateOne(r.ctx, filter, update)
+	if err != nil {
+		return nil, fmt.Errorf("UpdateOne error:\n\t%v", err)
 	}
+
 	return room, nil
 }
 
 func (r *roomRepository) DeleteRoom(id string) error {
-	if err := r.db.Delete(&model.RoomsDto{}, id).Error; err != nil {
-		return err
-	}
-	return nil
+	_, err := r.roomsCollection.DeleteOne(r.ctx, bson.M{"_id": id})
+	return err
 }
 
-func (r *roomRepository) GetRooms(filter *RoomsFilter) (rooms []model.RoomsDto, err error) {
-	var findResult *gm.DB = r.db
-	var search []string
-	if filter != nil {
-		if len(filter.IDs) > 0 {
-			search = append(search, "id IN ("+strings.Join(filter.IDs, ",")+")")
-		}
-		if len(search) > 0 {
-			findResult = findResult.Where(strings.Join(search, " AND "))
-		}
-	}
-	if err := findResult.Find(&rooms).Error; err != nil {
-		return nil, err
-	}
-	return
-}
-
-func NewRoomRepository(db *gm.DB) IRoomRepository {
-	return &roomRepository{
-		db,
-	}
+func NewRoomRepository(db *mongo.Client, dbName, collection string) IRoomRepository {
+	roomsCollection := db.Database(dbName).Collection(collection)
+	return &roomRepository{roomsCollection, context.Background()}
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/Reoneks/microservice_chat/auth/utils"
 	"github.com/Reoneks/microservice_chat/proto"
 
 	"github.com/go-chi/jwtauth"
@@ -86,17 +87,28 @@ func (a *Auth) LoginHandler(ctx context.Context, req *proto.LoginRequest, resp *
 func (a *Auth) Registration(ctx context.Context, req *proto.RegistrationRequest, resp *proto.Token) (err error) {
 	userResp, err := a.userService.CreateUser(context.Background(), ToUser(req))
 	if err != nil {
+		resp.Status.Ok = false
+		resp.Status.Error = err.Error()
 		return err
 	}
 
 	var userRespMap map[string]interface{}
 	err = json.Unmarshal(userResp.UserInfo, &userRespMap)
 	if err != nil {
+		resp.Status.Ok = false
+		resp.Status.Error = err.Error()
 		return err
 	}
 
-	user := ToAuthUser(req)
-	user.ID = userRespMap["id"].(string)
+	user := make(map[string]interface{})
+	user["_id"] = userRespMap["_id"].(string)
+	user["email"] = req.Email
+	user["password"], err = utils.Encrypt(req.Password)
+	if err != nil {
+		resp.Status.Ok = false
+		resp.Status.Error = err.Error()
+		return err
+	}
 
 	resp.Token, err = a.authService.Register(user)
 	if err != nil {

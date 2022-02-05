@@ -70,20 +70,20 @@ func (s *httpServer) Start() error {
 	private := router.Group("/client")
 	private.Use(http.Authorization(s.auth))
 	{
-		private.GET("/ws", clients.WSHandler(s.connect, s.upgrader))
-		private.GET("/messages", s.messagesMicroservice.GetMessagesByRoom)
+		private.GET("/ws", http.WSHandler(s.connect, s.upgrader))
+		private.GET("/rooms/:id/messages", s.messagesMicroservice.GetMessagesByRoom)
 
 		private.GET("/users", s.userMicroservice.GetUsers)
+		private.GET("/user/:id", s.userMicroservice.GetUserByID)
 		private.PUT("/user", s.userMicroservice.UpdateUser)
 		private.DELETE("/user", s.userMicroservice.DeleteUser)
-		private.GET("/user/:id", s.userMicroservice.GetUserByID)
 
 		private.GET("/rooms", s.roomMicroservice.GetRooms)
 		private.POST("/rooms", s.roomMicroservice.CreateRoom)
-		private.PUT("/rooms", s.roomMicroservice.UpdateRoom)
-		private.DELETE("/room", s.roomMicroservice.DeleteRoom)
-		private.GET("/add_users", s.roomMicroservice.AddUsers)
-		private.GET("/room/:id", s.roomMicroservice.GetRoom)
+		private.POST("/rooms/:id/users", s.roomMicroservice.AddUsers)
+		private.PUT("/rooms/:id", s.roomMicroservice.UpdateRoom)
+		private.DELETE("/rooms/:id", s.roomMicroservice.DeleteRoom)
+		private.DELETE("/rooms/:id/users", s.roomMicroservice.DeleteUsers)
 	}
 
 	return router.Start(s.url.String())

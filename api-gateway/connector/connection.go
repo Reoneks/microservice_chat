@@ -3,7 +3,6 @@ package connector
 import (
 	"net/http"
 
-	"github.com/Reoneks/microservice_chat/api-gateway/model"
 	"github.com/gorilla/websocket"
 )
 
@@ -14,7 +13,7 @@ type Connection interface {
 	Disconnect() error
 	SendMessage(data interface{}) error
 	ReadMessage() (messageType int, p []byte, err error)
-	GetUser() *model.User
+	GetUserID() string
 	GetCurrentRoom() string
 	SetCurrentRoom(roomID string)
 }
@@ -22,7 +21,7 @@ type Connection interface {
 type WSConnection struct {
 	r             *http.Request
 	conn          *websocket.Conn
-	user          *model.User
+	user          string
 	currentRoomID string
 
 	isConnected    bool
@@ -80,7 +79,7 @@ func (c *WSConnection) ReadMessage() (messageType int, p []byte, err error) {
 	return c.conn.ReadMessage()
 }
 
-func (c *WSConnection) GetUser() *model.User {
+func (c *WSConnection) GetUserID() string {
 	return c.user
 }
 
@@ -92,11 +91,11 @@ func (c *WSConnection) SetCurrentRoom(roomID string) {
 	c.currentRoomID = roomID
 }
 
-func NewWSConnection(r *http.Request, conn *websocket.Conn, user *model.User) Connection {
+func NewWSConnection(r *http.Request, conn *websocket.Conn, userID string) Connection {
 	return &WSConnection{
 		r:              r,
 		conn:           conn,
-		user:           user,
+		user:           userID,
 		currentRoomID:  "",
 		isConnected:    false,
 		messageChan:    make(chan []byte),

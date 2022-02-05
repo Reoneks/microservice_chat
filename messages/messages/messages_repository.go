@@ -1,63 +1,91 @@
 package messages
 
 import (
+	"context"
+	"fmt"
+	"log"
 	"time"
 
-	"github.com/Reoneks/microservice_chat/messages/model"
-	gm "gorm.io/gorm"
+	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type MessagesRepository interface {
-	GetMessagesByRoom(roomID string, limit, offset int) ([]model.Message, error)
-	CreateMessage(message *model.Message) (*model.Message, error)
-	UpdateMessage(message *model.Message) (*model.Message, error)
+	GetMessagesByRoom(roomID string, limit, offset int64) ([]map[string]interface{}, error)
+	CreateMessage(message map[string]interface{}) (map[string]interface{}, error)
+	UpdateMessage(message map[string]interface{}) (map[string]interface{}, error)
 	DeleteMessage(id string) error
 }
 
 type MessagesRepositoryImpl struct {
-	db *gm.DB
+	messagesCollection *mongo.Collection
+	ctx                context.Context
 }
 
-func (r *MessagesRepositoryImpl) GetMessagesByRoom(
-	roomID string,
-	limit,
-	offset int,
-) (messages []model.Message, err error) {
-	err = r.db.Limit(limit).Offset(offset).Where("room_id = ?", roomID).Find(&messages).Error
-	return
-}
+func (r *MessagesRepositoryImpl) GetMessagesByRoom(roomID string, limit, offset int64) ([]map[string]interface{}, error) {
+	findOptions := options.Find()
+	findOptions.SetLimit(limit)
+	findOptions.SetSkip(offset)
 
-func (r *MessagesRepositoryImpl) CreateMessage(message *model.Message) (*model.Message, error) {
-	message.CreatedAt = time.Now()
-	message.UpdatedAt = time.Now()
-	if err := r.db.Create(&message).Error; err != nil {
-		return nil, err
+	cur, err := r.messagesCollection.Find(r.ctx, bson.M{"room_id": roomID}, findOptions)
+	if err != nil {
+		return nil, fmt.Errorf("Find error:\n\t%v", err)
 	}
+
+	defer cur.Close(r.ctx)
+
+	var results []map[string]interface{}
+	for cur.Next(r.ctx) {
+		var data map[string]interface{}
+
+		err := cur.Decode(&data)
+		if err != nil {
+			log.Println(fmt.Errorf("Decode error:\n\t%v", err))
+			continue
+		}
+
+		results = append(results, data)
+	}
+
+	if err := cur.Err(); err != nil {
+		return nil, fmt.Errorf("Cursor error:\n\t%v", err)
+	}
+
+	return results, nil
+}
+
+func (r *MessagesRepositoryImpl) CreateMessage(message map[string]interface{}) (map[string]interface{}, error) {
+	message["_id"] = uuid.New().String()
+	message["created_at"] = time.Now()
+	message["updated_at"] = time.Now()
+	_, err := r.messagesCollection.InsertOne(r.ctx, message)
+	if err != nil {
+		return nil, fmt.Errorf("CreateMessage error:\n\t%v", err)
+	}
+
 	return message, nil
 }
 
-func (r *MessagesRepositoryImpl) UpdateMessage(message *model.Message) (*model.Message, error) {
-	var messages *model.Message
-	if err := r.db.Where("id = ?", message.ID).First(&messages).Error; err != nil {
-		return nil, err
-	}
-	message.CreatedAt = messages.CreatedAt
-	message.UpdatedAt = time.Now()
-	if err := r.db.Save(&message).Error; err != nil {
-		return nil, err
+func (r *MessagesRepositoryImpl) UpdateMessage(message map[string]interface{}) (map[string]interface{}, error) {
+	message["updated_at"] = time.Now()
+
+	filter := bson.M{"_id": message["_id"]}
+	update := bson.M{"$set": message}
+	_, err := r.messagesCollection.UpdateOne(r.ctx, filter, update)
+	if err != nil {
+		return nil, fmt.Errorf("UpdateOne error:\n\t%v", err)
 	}
 	return message, nil
 }
 
 func (r *MessagesRepositoryImpl) DeleteMessage(id string) error {
-	if err := r.db.Delete(&model.Message{}, id).Error; err != nil {
-		return err
-	}
-	return nil
+	_, err := r.messagesCollection.DeleteOne(r.ctx, bson.M{"_id": id})
+	return err
 }
 
-func NewMessagesRepository(db *gm.DB) MessagesRepository {
-	return &MessagesRepositoryImpl{
-		db,
-	}
+func NewMessagesRepository(db *mongo.Client, dbName, collection string) MessagesRepository {
+	messagesCollection := db.Database(dbName).Collection(collection)
+	return &MessagesRepositoryImpl{messagesCollection, context.Background()}
 }

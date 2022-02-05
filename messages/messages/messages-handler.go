@@ -6,7 +6,6 @@ import (
 	"log"
 
 	"github.com/Reoneks/microservice_chat/messages/config"
-	"github.com/Reoneks/microservice_chat/messages/model"
 	"github.com/Reoneks/microservice_chat/proto"
 
 	"github.com/streadway/amqp"
@@ -62,7 +61,14 @@ func NewMessagesMicro(
 	}
 }
 
-func (u *messagesMicro) publish(data []byte) error {
+func (u *messagesMicro) publish(data []byte, msg *proto.RabbitMessage) error {
+	msg.Message = data
+
+	bytes, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
 	return u.Ch.Publish(
 		u.Exchange,
 		"",
@@ -70,13 +76,19 @@ func (u *messagesMicro) publish(data []byte) error {
 		u.Immediate,
 		amqp.Publishing{
 			ContentType: "application/json",
-			Body:        data,
+			Body:        bytes,
 		},
 	)
 }
 
-func (u *messagesMicro) createMessage(data *model.Message) error {
-	message, err := u.MessagesService.CreateMessage(data)
+func (u *messagesMicro) createMessage(data *proto.RabbitMessage) error {
+	var msg map[string]interface{}
+	err := json.Unmarshal(data.Message, &msg)
+	if err != nil {
+		log.Println("Unmarshal msg error: ", err)
+	}
+
+	message, err := u.MessagesService.CreateMessage(msg)
 	if err != nil {
 		return err
 	}
@@ -86,11 +98,17 @@ func (u *messagesMicro) createMessage(data *model.Message) error {
 		return err
 	}
 
-	return u.publish(bytes)
+	return u.publish(bytes, data)
 }
 
-func (u *messagesMicro) updateMessage(data *model.Message) error {
-	message, err := u.MessagesService.UpdateMessage(data)
+func (u *messagesMicro) updateMessage(data *proto.RabbitMessage) error {
+	var msg map[string]interface{}
+	err := json.Unmarshal(data.Message, &msg)
+	if err != nil {
+		log.Println("Unmarshal msg error: ", err)
+	}
+
+	message, err := u.MessagesService.UpdateMessage(msg)
 	if err != nil {
 		return err
 	}
@@ -100,16 +118,16 @@ func (u *messagesMicro) updateMessage(data *model.Message) error {
 		return err
 	}
 
-	return u.publish(bytes)
+	return u.publish(bytes, data)
 }
 
-func (u *messagesMicro) deleteMessage(id string) error {
-	err := u.MessagesService.DeleteMessage(id)
+func (u *messagesMicro) deleteMessage(data *proto.RabbitMessage) error {
+	err := u.MessagesService.DeleteMessage(string(data.Message))
 	if err != nil {
 		return err
 	}
 
-	return nil
+	return u.publish(nil, data)
 }
 
 func (u *messagesMicro) StartConsumer() error {
@@ -127,30 +145,36 @@ func (u *messagesMicro) StartConsumer() error {
 	}
 
 	for message := range msgs {
-		var data model.Message
+		var data proto.RabbitMessage
 
 		err := json.Unmarshal(message.Body, &data)
-		if err == nil {
-			switch data.MessageType {
+		if err != nil {
+			log.Println("Unmarshal RabbitMessage error: ", err)
+		}
 
-			case "create":
-				err := u.createMessage(&data)
-				if err != nil {
-					log.Printf("%v", err)
-				}
+		switch data.MessageType {
+		case "create":
+			var msg map[string]interface{}
+			err = json.Unmarshal(data.Message, &msg)
+			if err != nil {
+				log.Println("Unmarshal msg error: ", err)
+			}
 
-			case "update":
-				err := u.updateMessage(&data)
-				if err != nil {
-					log.Printf("%v", err)
-				}
+			err := u.createMessage(&data)
+			if err != nil {
+				log.Printf("%v", err)
+			}
 
-			case "delete":
-				err := u.deleteMessage(data.ID)
-				if err != nil {
-					log.Printf("%v", err)
-				}
+		case "update":
+			err := u.updateMessage(&data)
+			if err != nil {
+				log.Printf("%v", err)
+			}
 
+		case "delete":
+			err := u.deleteMessage(&data)
+			if err != nil {
+				log.Printf("%v", err)
 			}
 		}
 	}
@@ -167,7 +191,7 @@ func (u *MessagesMicro) GetMessagesByRoom(
 	req *proto.MessageID,
 	rsp *proto.GetMessagesByRoomResponse,
 ) error {
-	messages, err := u.MessagesService.GetMessagesByRoom(req.ID, int(req.Limit), int((req.Page-1)*req.Limit))
+	messages, err := u.MessagesService.GetMessagesByRoom(req.RoomID, req.Limit, req.Offset)
 	if err != nil {
 		rsp.Status.Ok = false
 		rsp.Status.Error = err.Error()

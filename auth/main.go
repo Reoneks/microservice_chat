@@ -12,30 +12,33 @@ import (
 func main() {
 	cfg := config.GetConfig()
 
-	db, err := config.NewDB(cfg.DSN, cfg.MigrationURL)
+	db, err := config.NewDB(cfg.MongoUrl)
 	if err != nil {
 		panic(err)
 	}
 
 	jwt := cfg.NewJWT()
 
-	authRepository := auth.NewAuthRepository(db)
+	authRepository := auth.NewAuthRepository(db, cfg.DBName, cfg.Collection)
 	authService := auth.NewAuthService(authRepository, jwt)
 
-	service := micro.NewService(micro.Name(cfg.ServiceName))
-	service.Init()
+	authMicroService := micro.NewService(micro.Name(cfg.ServiceName), micro.Address(cfg.MicroServiceAddress))
+	authMicroService.Init()
+	userService := micro.NewService(micro.Address(cfg.UserServiceADDR))
+	userService.Init()
+
 	err = proto.RegisterAuthServiceHandler(
-		service.Server(),
+		authMicroService.Server(),
 		auth.NewAuth(
 			authService,
-			proto.NewUserService(cfg.UserServiceName, service.Client()),
+			proto.NewUserService(cfg.UserServiceName, userService.Client()),
 			jwt,
 		),
 	)
 	if err != nil {
 		panic(err)
 	}
-	if err := service.Run(); err != nil {
+	if err := authMicroService.Run(); err != nil {
 		panic(err)
 	}
 }

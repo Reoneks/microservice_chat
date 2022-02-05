@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/Reoneks/microservice_chat/api-gateway/config"
-	"github.com/Reoneks/microservice_chat/api-gateway/model"
+	"github.com/Reoneks/microservice_chat/proto"
 	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
@@ -22,10 +22,15 @@ type WSConnectorImpl struct {
 	rooms map[string]*RoomConnections
 	msgs  <-chan amqp.Delivery
 
+	room         proto.RoomsService
+	defaltLimit  int64
+	defaltOffset int64
+
 	ch *amqp.Channel
 
 	//& publish
 	qSendName string
+	exchange  string
 	mandatory bool //^ false
 	immediate bool //^ false
 }
@@ -68,7 +73,7 @@ func (c *WSConnectorImpl) listen(conn Connection) {
 		case <-conn.GetDisconnectChan():
 			c.disconnect(conn)
 		case msg := <-c.msgs:
-			var message model.Message
+			var message proto.RabbitMessage
 
 			err := json.Unmarshal(msg.Body, &message)
 			if err != nil {
@@ -76,19 +81,41 @@ func (c *WSConnectorImpl) listen(conn Connection) {
 				continue
 			}
 
-			c.SendMessageByRoom(message.RoomID, message)
+			msgData := make(map[string]interface{})
+			err = json.Unmarshal(message.Message, &msgData)
+			if err != nil {
+				c.log.Error(err)
+				continue
+			}
+
+			messageE := EventMessage{
+				Type: EventType(message.EventType),
+				Data: msgData,
+			}
+
+			c.SendMessageByRoom(message.RoomID, messageE)
 		}
 	}
 }
 
-func NewWSConnector(log *logrus.Logger, ch *amqp.Channel, cfg *config.Config, msgs <-chan amqp.Delivery) Connector {
+func NewWSConnector(
+	log *logrus.Logger,
+	ch *amqp.Channel,
+	cfg *config.Config,
+	msgs <-chan amqp.Delivery,
+	room proto.RoomsService,
+) Connector {
 	return &WSConnectorImpl{
-		log:       log,
-		rooms:     map[string]*RoomConnections{},
-		msgs:      msgs,
-		ch:        ch,
-		qSendName: cfg.SendName,
-		mandatory: cfg.Mandatory,
-		immediate: cfg.Immediate,
+		log:          log,
+		rooms:        map[string]*RoomConnections{},
+		room:         room,
+		defaltLimit:  cfg.DefaltLimit,
+		defaltOffset: cfg.DefaltOffset,
+		msgs:         msgs,
+		ch:           ch,
+		qSendName:    cfg.SendName,
+		exchange:     cfg.Exchange,
+		mandatory:    cfg.Mandatory,
+		immediate:    cfg.Immediate,
 	}
 }

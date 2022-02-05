@@ -1,27 +1,26 @@
 package config
 
 import (
-	"database/sql"
+	"context"
 	"sync"
 
 	"github.com/caarlos0/env"
-	"github.com/golang-migrate/migrate/v4"
-	mpostgres "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	DSN          string `env:"DB_DSN" envDefault:"host=0.0.0.0 user=postgres password=postgres dbname=analytics port=5433 sslmode=disable"`
-	ServiceName  string `env:"SERVICE_NAME" envDefault:"messages-service"`
-	RabbitMQUrl  string `env:"RABBIT_MQ_URL" envDefault:"amqp://guest:guest@localhost:5672/"`
-	MigrationURL string `env:"DB_MIGRATION_URL" envDefault:"file://auth/migrations"`
+	MicroServiceAddress string `env:"MICRO_SERVICE_ADDRESS" envDefault:"localhost:16567"`
+	MongoUrl            string `env:"MONGO_URL"`
+	DBName              string `env:"MONGO_DB_NAME"`
+	Collection          string `env:"MONGO_COLLECTION_NAME"`
+	ServiceName         string `env:"SERVICE_NAME" envDefault:"messages-service"`
+	RabbitMQUrl         string `env:"RABBIT_MQ_URL"`
 
 	//& StartConsumer
-	Consumer          string `env:"CONSUMER" envDefault:""`
+	Consumer          string `env:"CONSUMER"`
 	AutoAsk           bool   `env:"AUTO_ASK" envDefault:"true"`
 	ConsumerExclusive bool   `env:"CONSUMER_EXCLUSIVE" envDefault:"false"`
 	NoLocal           bool   `env:"NO_LOCAL" envDefault:"false"`
@@ -52,45 +51,14 @@ type Config struct {
 	ExchangeNoWait  bool   `env:"EXCHANGE_NO_WAIT" envDefault:"false"`
 }
 
-func NewDB(dsn, migrationsURL string) (*gorm.DB, error) {
-	if err := migrations(dsn, migrationsURL); err != nil && err != migrate.ErrNoChange {
-		return nil, err
-	}
-
-	client, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
+func NewDB(mongoURL string) (*mongo.Client, error) {
+	return mongo.Connect(context.Background(), options.Client().ApplyURI(mongoURL))
 }
 
 var (
 	once sync.Once
 	cfg  *Config
 )
-
-func migrations(dsn, migrationsURL string) error {
-	db, err := sql.Open("postgres", dsn)
-	if err != nil {
-		return err
-	}
-
-	driver, err := mpostgres.WithInstance(db, &mpostgres.Config{})
-	if err != nil {
-		return err
-	}
-
-	m, err := migrate.NewWithDatabaseInstance(
-		migrationsURL,
-		"postgres",
-		driver,
-	)
-	if err != nil {
-		return err
-	}
-
-	return m.Up()
-}
 
 func GetConfig() Config {
 	_ = godotenv.Load()

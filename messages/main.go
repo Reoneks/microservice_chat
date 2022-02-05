@@ -9,7 +9,7 @@ import (
 
 func main() {
 	cfg := config.GetConfig()
-	db, err := config.NewDB(cfg.DSN, cfg.MigrationURL)
+	db, err := config.NewDB(cfg.MongoUrl)
 	if err != nil {
 		panic(err)
 	}
@@ -19,7 +19,7 @@ func main() {
 		panic(err)
 	}
 
-	msgRep := messages.NewMessagesRepository(db)
+	msgRep := messages.NewMessagesRepository(db, cfg.DBName, cfg.Collection)
 	msgService := messages.NewMessagesService(msgRep)
 
 	amqp := config.GetAMQP(&cfg, nil, nil)
@@ -33,7 +33,7 @@ func main() {
 	}
 
 	rabbitMicro := messages.NewMessagesMicro(&cfg, msgService, amqpChan, &queue, nil)
-	microService := micro.NewService(micro.Name(cfg.ServiceName))
+	microService := micro.NewService(micro.Name(cfg.ServiceName), micro.Address(cfg.MicroServiceAddress))
 	microService.Init()
 
 	if err := proto.RegisterMessagesHandler(

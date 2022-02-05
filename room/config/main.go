@@ -1,58 +1,27 @@
 package config
 
 import (
-	"database/sql"
+	"context"
 	"sync"
 
 	"github.com/caarlos0/env"
-	"github.com/golang-migrate/migrate/v4"
-	mpostgres "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	DSN          string `env:"DB_DSN" envDefault:"host=0.0.0.0 user=postgres password=postgres dbname=analytics port=5433 sslmode=disable"`
-	ServiceName  string `env:"SERVICE_NAME" envDefault:"room-service"`
-	MigrationURL string `env:"DB_MIGRATION_URL" envDefault:"file://room/migrations"`
+	MicroServiceAddress string `env:"MICRO_SERVICE_ADDRESS" envDefault:"localhost:16566"`
+	MongoUrl            string `env:"MONGO_URL"`
+	DBName              string `env:"MONGO_DB_NAME"`
+	RoomCollection      string `env:"MONGO_ROOM_COLLECTION_NAME"`
+	RoomUserCollection  string `env:"MONGO_ROOM_USER_COLLECTION_NAME"`
+	ServiceName         string `env:"SERVICE_NAME" envDefault:"room-service"`
 }
 
-func NewDB(dsn, migrationsURL string) (*gorm.DB, error) {
-	if err := migrations(dsn, migrationsURL); err != nil && err != migrate.ErrNoChange {
-		return nil, err
-	}
-
-	client, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
-}
-
-func migrations(dsn, migrationsURL string) error {
-	db, err := sql.Open("postgres", dsn)
-	if err != nil {
-		return err
-	}
-
-	driver, err := mpostgres.WithInstance(db, &mpostgres.Config{})
-	if err != nil {
-		return err
-	}
-
-	m, err := migrate.NewWithDatabaseInstance(
-		migrationsURL,
-		"postgres",
-		driver,
-	)
-	if err != nil {
-		return err
-	}
-
-	return m.Up()
+func NewDB(mongoURL string) (*mongo.Client, error) {
+	return mongo.Connect(context.Background(), options.Client().ApplyURI(mongoURL))
 }
 
 var (

@@ -33,18 +33,24 @@ func main() {
 		CheckOrigin:     func(r *http.Request) bool { return true },
 	}
 
-	service := micro.NewService()
-	service.Init()
+	authService := micro.NewService(micro.Address(cfg.AuthServiceADDR))
+	authService.Init()
+	userService := micro.NewService(micro.Address(cfg.UserServiceADDR))
+	userService.Init()
+	roomService := micro.NewService(micro.Address(cfg.RoomServiceADDR))
+	roomService.Init()
+	messagesService := micro.NewService(micro.Address(cfg.MessageServiceADDR))
+	messagesService.Init()
 
-	auth := proto.NewAuthService(cfg.AuthServiceName, service.Client())
-	user := proto.NewUserService(cfg.UserServiceName, service.Client())
-	room := proto.NewRoomsService(cfg.RoomServiceName, service.Client())
-	messages := proto.NewMessagesService(cfg.MessageServiceName, service.Client())
+	auth := proto.NewAuthService(cfg.AuthServiceName, authService.Client())
+	user := proto.NewUserService(cfg.UserServiceName, userService.Client())
+	room := proto.NewRoomsService(cfg.RoomServiceName, roomService.Client())
+	messages := proto.NewMessagesService(cfg.MessageServiceName, messagesService.Client())
 
 	authMicroservice := clients.NewAuthMicroservice(auth)
 	userMicroservice := clients.NewUserMicroservice(user, auth)
-	roomMicroservice := clients.NewRoomMicroservice(room)
-	messagesMicroservice := clients.NewMessagesMicroservice(messages)
+	roomMicroservice := clients.NewRoomMicroservice(room, cfg.DefaltLimit, cfg.DefaltOffset)
+	messagesMicroservice := clients.NewMessagesMicroservice(messages, cfg.DefaltLimit, cfg.DefaltOffset)
 
 	amqp := config.GetAMQP(&cfg, nil, nil, nil)
 	ch, err := config.StartRabbitMQ(cfg.RabbitMQUrl)
@@ -62,7 +68,7 @@ func main() {
 		panic(err)
 	}
 
-	connect := connector.NewWSConnector(log, ch, &cfg, msgs)
+	connect := connector.NewWSConnector(log, ch, &cfg, msgs, room)
 
 	server := server.NewHTTPServer(
 		log,

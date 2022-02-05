@@ -37,11 +37,12 @@ func NewRoomsEndpoints() []*api.Endpoint {
 
 type RoomsService interface {
 	GetRoom(ctx context.Context, in *RoomID, opts ...client.CallOption) (*RoomStructResponse, error)
-	GetRooms(ctx context.Context, in *Filter, opts ...client.CallOption) (*GetRoomsResponse, error)
+	GetAllRooms(ctx context.Context, in *GetAllRoomsRequest, opts ...client.CallOption) (*RoomStructResponse, error)
 	CreateRoom(ctx context.Context, in *RoomStruct, opts ...client.CallOption) (*RoomStructResponse, error)
 	DeleteRoom(ctx context.Context, in *DeleteRequest, opts ...client.CallOption) (*Status, error)
 	UpdateRoom(ctx context.Context, in *UpdateRequest, opts ...client.CallOption) (*RoomStructResponse, error)
 	AddUsers(ctx context.Context, in *AddUsersRequest, opts ...client.CallOption) (*Status, error)
+	DeleteUsers(ctx context.Context, in *AddUsersRequest, opts ...client.CallOption) (*Status, error)
 }
 
 type roomsService struct {
@@ -66,9 +67,9 @@ func (c *roomsService) GetRoom(ctx context.Context, in *RoomID, opts ...client.C
 	return out, nil
 }
 
-func (c *roomsService) GetRooms(ctx context.Context, in *Filter, opts ...client.CallOption) (*GetRoomsResponse, error) {
-	req := c.c.NewRequest(c.name, "Rooms.GetRooms", in)
-	out := new(GetRoomsResponse)
+func (c *roomsService) GetAllRooms(ctx context.Context, in *GetAllRoomsRequest, opts ...client.CallOption) (*RoomStructResponse, error) {
+	req := c.c.NewRequest(c.name, "Rooms.GetAllRooms", in)
+	out := new(RoomStructResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -116,25 +117,37 @@ func (c *roomsService) AddUsers(ctx context.Context, in *AddUsersRequest, opts .
 	return out, nil
 }
 
+func (c *roomsService) DeleteUsers(ctx context.Context, in *AddUsersRequest, opts ...client.CallOption) (*Status, error) {
+	req := c.c.NewRequest(c.name, "Rooms.DeleteUsers", in)
+	out := new(Status)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Rooms service
 
 type RoomsHandler interface {
 	GetRoom(context.Context, *RoomID, *RoomStructResponse) error
-	GetRooms(context.Context, *Filter, *GetRoomsResponse) error
+	GetAllRooms(context.Context, *GetAllRoomsRequest, *RoomStructResponse) error
 	CreateRoom(context.Context, *RoomStruct, *RoomStructResponse) error
 	DeleteRoom(context.Context, *DeleteRequest, *Status) error
 	UpdateRoom(context.Context, *UpdateRequest, *RoomStructResponse) error
 	AddUsers(context.Context, *AddUsersRequest, *Status) error
+	DeleteUsers(context.Context, *AddUsersRequest, *Status) error
 }
 
 func RegisterRoomsHandler(s server.Server, hdlr RoomsHandler, opts ...server.HandlerOption) error {
 	type rooms interface {
 		GetRoom(ctx context.Context, in *RoomID, out *RoomStructResponse) error
-		GetRooms(ctx context.Context, in *Filter, out *GetRoomsResponse) error
+		GetAllRooms(ctx context.Context, in *GetAllRoomsRequest, out *RoomStructResponse) error
 		CreateRoom(ctx context.Context, in *RoomStruct, out *RoomStructResponse) error
 		DeleteRoom(ctx context.Context, in *DeleteRequest, out *Status) error
 		UpdateRoom(ctx context.Context, in *UpdateRequest, out *RoomStructResponse) error
 		AddUsers(ctx context.Context, in *AddUsersRequest, out *Status) error
+		DeleteUsers(ctx context.Context, in *AddUsersRequest, out *Status) error
 	}
 	type Rooms struct {
 		rooms
@@ -151,8 +164,8 @@ func (h *roomsHandler) GetRoom(ctx context.Context, in *RoomID, out *RoomStructR
 	return h.RoomsHandler.GetRoom(ctx, in, out)
 }
 
-func (h *roomsHandler) GetRooms(ctx context.Context, in *Filter, out *GetRoomsResponse) error {
-	return h.RoomsHandler.GetRooms(ctx, in, out)
+func (h *roomsHandler) GetAllRooms(ctx context.Context, in *GetAllRoomsRequest, out *RoomStructResponse) error {
+	return h.RoomsHandler.GetAllRooms(ctx, in, out)
 }
 
 func (h *roomsHandler) CreateRoom(ctx context.Context, in *RoomStruct, out *RoomStructResponse) error {
@@ -169,4 +182,8 @@ func (h *roomsHandler) UpdateRoom(ctx context.Context, in *UpdateRequest, out *R
 
 func (h *roomsHandler) AddUsers(ctx context.Context, in *AddUsersRequest, out *Status) error {
 	return h.RoomsHandler.AddUsers(ctx, in, out)
+}
+
+func (h *roomsHandler) DeleteUsers(ctx context.Context, in *AddUsersRequest, out *Status) error {
+	return h.RoomsHandler.DeleteUsers(ctx, in, out)
 }

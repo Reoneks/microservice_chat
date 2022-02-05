@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"github.com/Reoneks/microservice_chat/auth/model"
 	"github.com/Reoneks/microservice_chat/auth/utils"
 
 	"github.com/go-chi/jwtauth"
@@ -9,7 +8,7 @@ import (
 
 type AuthService interface {
 	Login(email, password string) (string, error)
-	Register(user *model.Auth) (string, error)
+	Register(user map[string]interface{}) (string, error)
 	Delete(id string) error
 }
 
@@ -23,30 +22,24 @@ func (s *AuthServiceImpl) Login(email, password string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	err = utils.Compare(receivedUser.Password, password)
+	err = utils.Compare(receivedUser["password"].(string), password)
 	if err != nil {
 		return "", err
 	}
-	_, tokenString, err := s.jwt.Encode(map[string]interface{}{"user_id": receivedUser.ID})
+	_, tokenString, err := s.jwt.Encode(map[string]interface{}{"user_id": receivedUser["_id"]})
 	if err != nil {
 		return "", err
 	}
 	return tokenString, nil
 }
 
-func (s *AuthServiceImpl) Register(user *model.Auth) (string, error) {
-	var err error
-	user.Password, err = utils.Encrypt(user.Password)
-	if err != nil {
-		return "", err
-	}
-
+func (s *AuthServiceImpl) Register(user map[string]interface{}) (string, error) {
 	receivedUser, err := s.authRepository.AddUser(user)
 	if err != nil {
 		return "", err
 	}
 
-	_, tokenString, err := s.jwt.Encode(map[string]interface{}{"user_id": receivedUser.ID})
+	_, tokenString, err := s.jwt.Encode(map[string]interface{}{"user_id": receivedUser["_id"]})
 	if err != nil {
 		return "", err
 	}

@@ -13,10 +13,18 @@ type Config struct {
 	LogLevel    string `env:"API_LOG_LEVEL" envDefault:"info"`
 	RabbitMQUrl string `env:"RABBIT_MQ_URL" envDefault:"amqp://guest:guest@localhost:5672/"`
 
+	DefaltLimit  int64 `env:"DEFALT_LIMIT" envDefault:"100"`
+	DefaltOffset int64 `env:"DEFALT_LIMIT" envDefault:"0"`
+
 	UserServiceName    string `env:"USER_SERVICE_NAME" envDefault:"user-service"`
 	AuthServiceName    string `env:"AUTH_SERVICE_NAME" envDefault:"auth-service"`
 	RoomServiceName    string `env:"ROOM_SERVICE_NAME" envDefault:"room-service"`
 	MessageServiceName string `env:"MESSAGE_SERVICE_NAME" envDefault:"messages-service"`
+
+	UserServiceADDR    string `env:"USER_SERVICE_ADDR" envDefault:"localhost:16564"`
+	AuthServiceADDR    string `env:"AUTH_SERVICE_ADDR" envDefault:"localhost:16565"`
+	RoomServiceADDR    string `env:"ROOM_SERVICE_ADDR" envDefault:"localhost:16566"`
+	MessageServiceADDR string `env:"MESSAGE_SERVICE_ADDR" envDefault:"localhost:16567"`
 
 	ApiGatewaySubscribeName string `env:"API_GATEWAY_SUBSCRIBE_CHANNEL_NAME" envDefault:"ApiGatewayResp"`
 

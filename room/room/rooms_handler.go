@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 
 	"github.com/Reoneks/microservice_chat/proto"
-	"github.com/Reoneks/microservice_chat/room/model"
 )
 
 type RoomsMicro struct {
@@ -27,41 +26,13 @@ func (u *RoomsMicro) GetRoom(ctx context.Context, req *proto.RoomID, rsp *proto.
 		return err
 	}
 
-	rsp.Room.RoomInfo = bytes
-	rsp.Status.Ok = true
-	return nil
-}
-
-func (u *RoomsMicro) GetRooms(ctx context.Context, req *proto.Filter, rsp *proto.GetRoomsResponse) error {
-	rooms, err := u.RoomService.GetRooms(&RoomsFilter{IDs: req.RoomIDs})
-	if err != nil {
-		rsp.Status.Ok = false
-		rsp.Status.Error = err.Error()
-		return err
-	}
-
-	var resp []*proto.RoomStruct
-
-	for _, room := range rooms {
-		bytes, err := json.Marshal(room)
-		if err != nil {
-			rsp.Status.Ok = false
-			rsp.Status.Error = err.Error()
-			return err
-		}
-
-		resp = append(resp, &proto.RoomStruct{
-			RoomInfo: bytes,
-		})
-	}
-
-	rsp.Rooms = resp
+	rsp.Room = bytes
 	rsp.Status.Ok = true
 	return nil
 }
 
 func (u *RoomsMicro) CreateRoom(ctx context.Context, req *proto.RoomStruct, rsp *proto.RoomStructResponse) error {
-	var data model.RoomsDto
+	data := make(map[string]interface{})
 	err := json.Unmarshal(req.RoomInfo, &data)
 	if err != nil {
 		rsp.Status.Ok = false
@@ -69,7 +40,7 @@ func (u *RoomsMicro) CreateRoom(ctx context.Context, req *proto.RoomStruct, rsp 
 		return err
 	}
 
-	room, err := u.RoomService.CreateRoom(&data)
+	room, err := u.RoomService.CreateRoom(data)
 	if err != nil {
 		rsp.Status.Ok = false
 		rsp.Status.Error = err.Error()
@@ -83,13 +54,13 @@ func (u *RoomsMicro) CreateRoom(ctx context.Context, req *proto.RoomStruct, rsp 
 		return err
 	}
 
-	rsp.Room.RoomInfo = bytes
+	rsp.Room = bytes
 	rsp.Status.Ok = true
 	return nil
 }
 
 func (u *RoomsMicro) DeleteRoom(ctx context.Context, req *proto.DeleteRequest, rsp *proto.Status) error {
-	err := u.RoomService.DeleteRoom(req.RoomID, req.UserID)
+	err := u.RoomService.DeleteRoom(req.RoomID)
 	if err != nil {
 		rsp.Ok = false
 		rsp.Error = err.Error()
@@ -101,15 +72,15 @@ func (u *RoomsMicro) DeleteRoom(ctx context.Context, req *proto.DeleteRequest, r
 }
 
 func (u *RoomsMicro) UpdateRoom(ctx context.Context, req *proto.UpdateRequest, rsp *proto.RoomStructResponse) error {
-	var data model.RoomsDto
-	err := json.Unmarshal(req.Room.RoomInfo, &data)
+	data := make(map[string]interface{})
+	err := json.Unmarshal(req.Room, &data)
 	if err != nil {
 		rsp.Status.Ok = false
 		rsp.Status.Error = err.Error()
 		return err
 	}
 
-	room, err := u.RoomService.UpdateRoom(&data, req.UserID)
+	room, err := u.RoomService.UpdateRoom(data)
 	if err != nil {
 		rsp.Status.Ok = false
 		rsp.Status.Error = err.Error()
@@ -123,13 +94,13 @@ func (u *RoomsMicro) UpdateRoom(ctx context.Context, req *proto.UpdateRequest, r
 		return err
 	}
 
-	rsp.Room.RoomInfo = bytes
+	rsp.Room = bytes
 	rsp.Status.Ok = true
 	return nil
 }
 
 func (u *RoomsMicro) AddUsers(ctx context.Context, req *proto.AddUsersRequest, rsp *proto.Status) error {
-	err := u.RoomService.AddUsers(req.RoomID, req.UserID, req.UserIDs)
+	err := u.RoomService.AddUsers(req.RoomID, req.UserIDs)
 	if err != nil {
 		rsp.Ok = false
 		rsp.Error = err.Error()
@@ -137,5 +108,37 @@ func (u *RoomsMicro) AddUsers(ctx context.Context, req *proto.AddUsersRequest, r
 	}
 
 	rsp.Ok = true
+	return nil
+}
+
+func (u *RoomsMicro) DeleteUsers(ctx context.Context, req *proto.AddUsersRequest, rsp *proto.Status) error {
+	err := u.RoomService.DeleteUsers(req.RoomID, req.UserIDs)
+	if err != nil {
+		rsp.Ok = false
+		rsp.Error = err.Error()
+		return err
+	}
+
+	rsp.Ok = true
+	return nil
+}
+
+func (u *RoomsMicro) GetAllRooms(ctx context.Context, req *proto.GetAllRoomsRequest, rsp *proto.RoomStructResponse) error {
+	rooms, err := u.RoomService.GetAllRooms(req.UserID, req.Limit, req.Offset)
+	if err != nil {
+		rsp.Status.Ok = false
+		rsp.Status.Error = err.Error()
+		return err
+	}
+
+	bytes, err := json.Marshal(rooms)
+	if err != nil {
+		rsp.Status.Ok = false
+		rsp.Status.Error = err.Error()
+		return err
+	}
+
+	rsp.Room = bytes
+	rsp.Status.Ok = true
 	return nil
 }

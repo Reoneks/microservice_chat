@@ -11,12 +11,12 @@ import (
 
 func main() {
 	cfg := config.GetConfig()
-	db, err := config.NewDB(cfg.DSN, cfg.MigrationURL)
+	db, err := config.NewDB(cfg.MongoUrl)
 	if err != nil {
 		panic(err)
 	}
 
-	userRep := user.NewUserRepository(db)
+	userRep := user.NewUserRepository(db, cfg.DBName, cfg.Collection)
 	userService := user.NewUserService(userRep)
 	microService := micro.NewService(micro.Name(cfg.ServiceName))
 	microService.Init()

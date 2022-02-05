@@ -5,11 +5,12 @@ option go_package = ".;proto";
 
 service Rooms {
     rpc GetRoom(RoomID) returns (RoomStructResponse) {}
-    rpc GetRooms(Filter) returns (GetRoomsResponse) {}
+    rpc GetAllRooms(GetAllRoomsRequest) returns (RoomStructResponse) {}
     rpc CreateRoom(RoomStruct) returns (RoomStructResponse) {}
     rpc DeleteRoom(DeleteRequest) returns (Status) {}
     rpc UpdateRoom(UpdateRequest) returns (RoomStructResponse) {}
     rpc AddUsers(AddUsersRequest) returns (Status) {}
+    rpc DeleteUsers(AddUsersRequest) returns (Status) {}
 }
 
 message RoomID {
@@ -20,23 +21,19 @@ message RoomStruct {
 	bytes RoomInfo = 1;
 }
 
-message Filter {
-	repeated string RoomIDs = 1;
-}
-
-message GetRoomsResponse {
-	repeated RoomStruct Rooms = 1;
-	Status Status = 2;
+message GetAllRoomsRequest {
+	int64 Limit = 1;
+	int64 Offset = 2;
+	string UserID = 3;
 }
 
 message RoomStructResponse {
-	RoomStruct Room = 1;
+	bytes Room = 1;
 	Status Status = 2;
 }
 
 message DeleteRequest {
 	string RoomID = 1;
-	string UserID = 2;
 }
 
 message Status {
@@ -45,12 +42,11 @@ message Status {
 }
 
 message UpdateRequest {
-	RoomStruct Room = 1;
-	string UserID = 2;
+	bytes Room = 1;
+	string RoomID = 2;
 }
 
 message AddUsersRequest {
 	string RoomID = 1;
-	string UserID = 2;
 	repeated string UserIDs = 3;
 }

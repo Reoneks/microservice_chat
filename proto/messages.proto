@@ -10,12 +10,19 @@ service Messages {
 }
 
 message MessageID {
-	string ID = 1;
-	int32 Limit = 2;
-	int32 Page = 3;
+	string RoomID = 1;
+	int64 Limit = 2;
+	int64 Offset = 3;
 }
 
 message GetMessagesByRoomResponse{
 	bytes Messages = 1;
 	rooms.Status Status = 2;
+}
+
+message RabbitMessage{
+	bytes Message = 1;
+	string MessageType = 2;
+	int64 EventType = 3;
+	string RoomID = 4;
 }

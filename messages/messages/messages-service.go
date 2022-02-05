@@ -1,27 +1,25 @@
 package messages
 
-import "github.com/Reoneks/microservice_chat/messages/model"
-
 type messagesService struct {
 	messagesService MessagesRepository
 }
 
 type MessagesService interface {
-	GetMessagesByRoom(roomID string, limit, offset int) ([]model.Message, error)
-	CreateMessage(message *model.Message) (*model.Message, error)
-	UpdateMessage(message *model.Message) (*model.Message, error)
+	GetMessagesByRoom(roomID string, limit, offset int64) ([]map[string]interface{}, error)
+	CreateMessage(message map[string]interface{}) (map[string]interface{}, error)
+	UpdateMessage(message map[string]interface{}) (map[string]interface{}, error)
 	DeleteMessage(id string) error
 }
 
-func (us *messagesService) GetMessagesByRoom(roomID string, limit, offset int) ([]model.Message, error) {
+func (us *messagesService) GetMessagesByRoom(roomID string, limit, offset int64) ([]map[string]interface{}, error) {
 	return us.messagesService.GetMessagesByRoom(roomID, limit, offset)
 }
 
-func (us *messagesService) CreateMessage(message *model.Message) (*model.Message, error) {
+func (us *messagesService) CreateMessage(message map[string]interface{}) (map[string]interface{}, error) {
 	return us.messagesService.CreateMessage(message)
 }
 
-func (us *messagesService) UpdateMessage(message *model.Message) (*model.Message, error) {
+func (us *messagesService) UpdateMessage(message map[string]interface{}) (map[string]interface{}, error) {
 	return us.messagesService.UpdateMessage(message)
 }
 
