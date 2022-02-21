@@ -31,6 +31,8 @@ func NewAuth(authService AuthService, userService proto.UserService, jwt *jwtaut
 }
 
 func (a *Auth) AuthHandler(ctx context.Context, req *proto.Token, resp *proto.UserID) error {
+	resp.Status = new(proto.Status)
+
 	if req.Token == "" {
 		resp.Status.Ok = false
 		resp.Status.Error = "token is required"
@@ -57,6 +59,8 @@ func (a *Auth) AuthHandler(ctx context.Context, req *proto.Token, resp *proto.Us
 }
 
 func (a *Auth) Delete(ctx context.Context, req *proto.UserID, resp *proto.DeleteUserResponse) (err error) {
+	resp.Status = new(proto.Status)
+
 	err = a.authService.Delete(req.UserID)
 	if err != nil {
 		resp.Status.Ok = false
@@ -69,6 +73,8 @@ func (a *Auth) Delete(ctx context.Context, req *proto.UserID, resp *proto.Delete
 }
 
 func (a *Auth) LoginHandler(ctx context.Context, req *proto.LoginRequest, resp *proto.Token) (err error) {
+	resp.Status = new(proto.Status)
+
 	resp.Token, err = a.authService.Login(req.Email, req.Password)
 	if err != nil {
 		resp.Status.Ok = false
@@ -85,6 +91,8 @@ func (a *Auth) LoginHandler(ctx context.Context, req *proto.LoginRequest, resp *
 }
 
 func (a *Auth) Registration(ctx context.Context, req *proto.RegistrationRequest, resp *proto.Token) (err error) {
+	resp.Status = new(proto.Status)
+
 	userResp, err := a.userService.CreateUser(context.Background(), ToUser(req))
 	if err != nil {
 		resp.Status.Ok = false

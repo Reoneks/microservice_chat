@@ -1,8 +1,6 @@
 package server
 
 import (
-	"net/url"
-
 	"github.com/Reoneks/microservice_chat/api-gateway/clients"
 	"github.com/Reoneks/microservice_chat/api-gateway/connector"
 	"github.com/Reoneks/microservice_chat/api-gateway/server/http"
@@ -20,7 +18,7 @@ type HTTPServer interface {
 
 type httpServer struct {
 	log                     *logrus.Logger
-	url                     *url.URL
+	url                     string
 	authMicroservice        *clients.AuthMicroservice
 	userMicroservice        *clients.UserMicroservice
 	roomMicroservice        *clients.RoomMicroservice
@@ -33,7 +31,7 @@ type httpServer struct {
 
 func NewHTTPServer(
 	log *logrus.Logger,
-	url *url.URL,
+	url string,
 	authMicroservice *clients.AuthMicroservice,
 	userMicroservice *clients.UserMicroservice,
 	roomMicroservice *clients.RoomMicroservice,
@@ -86,5 +84,5 @@ func (s *httpServer) Start() error {
 		private.DELETE("/rooms/:id/users", s.roomMicroservice.DeleteUsers)
 	}
 
-	return router.Start(s.url.String())
+	return router.Start(s.url)
 }

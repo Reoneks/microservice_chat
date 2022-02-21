@@ -96,6 +96,6 @@ func (ur *userRepository) DeleteUser(id string) error {
 }
 
 func NewUserRepository(db *mongo.Client, dbName, collection string) IUserRepository {
-	roomsCollection := db.Database(dbName).Collection(collection)
-	return &userRepository{roomsCollection, context.Background()}
+	usersCollection := db.Database(dbName).Collection(collection)
+	return &userRepository{usersCollection, context.Background()}
 }

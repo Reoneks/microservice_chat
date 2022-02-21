@@ -21,7 +21,6 @@ const (
 
 func main() {
 	cfg := config.GetConfig()
-	url := cfg.ServerAddress()
 	log, err := config.NewLogger(cfg.LogLevel)
 	if err != nil {
 		panic(err)
@@ -72,7 +71,7 @@ func main() {
 
 	server := server.NewHTTPServer(
 		log,
-		url,
+		cfg.Addr,
 		authMicroservice,
 		userMicroservice,
 		roomMicroservice,

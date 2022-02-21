@@ -25,7 +25,17 @@ func (s *roomService) GetRoom(id string) (map[string]interface{}, error) {
 }
 
 func (s *roomService) GetAllRooms(userID string, limit, offset int64) ([]map[string]interface{}, error) {
-	return s.uRRepository.GetRoomsByUserId(userID, limit, offset)
+	rooms, err := s.uRRepository.GetRoomsByUserId(userID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range rooms {
+		rooms[i]["id"] = rooms[i]["_id"]
+		delete(rooms[i], "_id")
+	}
+
+	return rooms, nil
 }
 
 func (s *roomService) CreateRoom(room map[string]interface{}) (map[string]interface{}, error) {
@@ -40,6 +50,9 @@ func (s *roomService) CreateRoom(room map[string]interface{}) (map[string]interf
 	if err != nil {
 		return nil, err
 	}
+
+	result["id"] = result["_id"]
+	delete(result, "_id")
 	return result, nil
 }
 

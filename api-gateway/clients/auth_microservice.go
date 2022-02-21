@@ -27,9 +27,9 @@ func (a *AuthMicroservice) Register(ctx echo.Context) error {
 
 	rsp, err := a.auth.Registration(context.Background(), &req)
 	if err != nil {
-		return ctx.NoContent(http.StatusInternalServerError)
+		return ctx.String(http.StatusInternalServerError, err.Error())
 	} else if rsp.Token == "" {
-		return ctx.NoContent(http.StatusUnauthorized)
+		return ctx.String(http.StatusUnauthorized, rsp.Status.Error)
 	}
 
 	return ctx.JSON(http.StatusOK, rsp.Token)

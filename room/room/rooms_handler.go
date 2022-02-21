@@ -12,6 +12,8 @@ type RoomsMicro struct {
 }
 
 func (u *RoomsMicro) GetRoom(ctx context.Context, req *proto.RoomID, rsp *proto.RoomStructResponse) error {
+	rsp.Status = new(proto.Status)
+
 	room, err := u.RoomService.GetRoom(req.ID)
 	if err != nil {
 		rsp.Status.Ok = false
@@ -32,6 +34,8 @@ func (u *RoomsMicro) GetRoom(ctx context.Context, req *proto.RoomID, rsp *proto.
 }
 
 func (u *RoomsMicro) CreateRoom(ctx context.Context, req *proto.RoomStruct, rsp *proto.RoomStructResponse) error {
+	rsp.Status = new(proto.Status)
+
 	data := make(map[string]interface{})
 	err := json.Unmarshal(req.RoomInfo, &data)
 	if err != nil {
@@ -72,6 +76,8 @@ func (u *RoomsMicro) DeleteRoom(ctx context.Context, req *proto.DeleteRequest, r
 }
 
 func (u *RoomsMicro) UpdateRoom(ctx context.Context, req *proto.UpdateRequest, rsp *proto.RoomStructResponse) error {
+	rsp.Status = new(proto.Status)
+
 	data := make(map[string]interface{})
 	err := json.Unmarshal(req.Room, &data)
 	if err != nil {
@@ -124,6 +130,8 @@ func (u *RoomsMicro) DeleteUsers(ctx context.Context, req *proto.AddUsersRequest
 }
 
 func (u *RoomsMicro) GetAllRooms(ctx context.Context, req *proto.GetAllRoomsRequest, rsp *proto.RoomStructResponse) error {
+	rsp.Status = new(proto.Status)
+
 	rooms, err := u.RoomService.GetAllRooms(req.UserID, req.Limit, req.Offset)
 	if err != nil {
 		rsp.Status.Ok = false

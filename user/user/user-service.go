@@ -25,6 +25,12 @@ func (us *userService) GetUsers() ([]map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	for i := range userDto {
+		userDto[i]["id"] = userDto[i]["_id"]
+		delete(userDto[i], "_id")
+	}
+
 	return userDto, nil
 }
 
@@ -33,6 +39,9 @@ func (us *userService) CreateUser(user map[string]interface{}) (map[string]inter
 	if err != nil {
 		return nil, err
 	}
+
+	userDto["id"] = userDto["_id"]
+	delete(userDto, "_id")
 	return userDto, nil
 }
 

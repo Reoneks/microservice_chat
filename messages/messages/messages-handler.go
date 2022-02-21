@@ -191,6 +191,8 @@ func (u *MessagesMicro) GetMessagesByRoom(
 	req *proto.MessageID,
 	rsp *proto.GetMessagesByRoomResponse,
 ) error {
+	rsp.Status = new(proto.Status)
+
 	messages, err := u.MessagesService.GetMessagesByRoom(req.RoomID, req.Limit, req.Offset)
 	if err != nil {
 		rsp.Status.Ok = false

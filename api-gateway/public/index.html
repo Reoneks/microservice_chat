@@ -56,7 +56,7 @@
 
           <form class="message-input">
             <label for="message-input">
-                <textarea required class="form-control test" id="message-input"></textarea>
+              <input id="message-input" type="text" required class="form-control" />
             </label>
 
             <label>
@@ -68,14 +68,9 @@
     </div>
   </div>
   <script>
-    $("#message-input").emojioneArea({
-      inline: true,
-    });
-  </script>
-  <script>
     const localStorage = window.localStorage;
-    const apiURL = `http://0.0.0.0:5104`;
-    const wsUrl = `ws://0.0.0.0:5104/ws`;
+    const apiURL = `http://127.0.0.1:16568`;
+    const wsUrl = `ws://127.0.0.1:16568/client/ws`;
 
     const SubscribeRoomEventType = 1
     const UnsubscribeRoomEventType = 2
@@ -120,7 +115,7 @@
     createRoomBtn.addEventListener("click", createRoom)
 
     async function createRoom() {
-      const response = await fetch(`${apiURL}/rooms`, {
+      const response = await fetch(`${apiURL}/client/rooms`, {
         headers: getHeaders(),
         method: "POST",
         body: JSON.stringify({
@@ -218,7 +213,7 @@
     }
 
     async function getRooms(limit, offset) {
-      const response = await fetch(`${apiURL}/rooms?limit=${limit}&offset=${offset}`, {headers: getHeaders()});
+      const response = await fetch(`${apiURL}/client/rooms?limit=${limit}&offset=${offset}`, {headers: getHeaders()});
       const json = await response.json();
       rooms = json.rooms;
 
@@ -227,7 +222,7 @@
     }
 
     async function getMessages(limit, offset) {
-      const url = `${apiURL}/rooms/${currentRoom.id}/messages?limit=${limit}&offset=${offset}`
+      const url = `${apiURL}/client/rooms/${currentRoom.id}/messages?limit=${limit}&offset=${offset}`
       const response = await fetch(url, {headers: getHeaders()});
       const { messages } = await response.json();
 
@@ -612,7 +607,7 @@
     }
 
     async function dropRoom(room_id) {
-      await fetch(`${apiURL}/rooms/${room_id}`, {
+      await fetch(`${apiURL}/client/rooms/${room_id}`, {
         headers: getHeaders(),
         method: "DELETE",
       });
@@ -622,7 +617,7 @@
     }
 
     async function updateRoom(room_id) {
-      await fetch(`${apiURL}/rooms/${room_id}`, {
+      await fetch(`${apiURL}/client/rooms/${room_id}`, {
         headers: getHeaders(),
         method: "PUT",
       })
@@ -630,7 +625,7 @@
 
     async function leaveRoom(room_id) {
       await disconnect();
-      await fetch(`${apiURL}/rooms/${room_id}/users/`, {
+      await fetch(`${apiURL}/client/rooms/${room_id}/users/`, {
         headers: getHeaders(),
         method: "DELETE",
         body: JSON.stringify({
@@ -650,7 +645,7 @@
 
     function getHeaders() {
       return {
-        Authorization: `Bearer ${token}`,
+        "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json"
       }
     }

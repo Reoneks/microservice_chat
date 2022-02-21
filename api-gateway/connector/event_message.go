@@ -65,7 +65,7 @@ func (c *WSConnectorImpl) onEventMessage(conn Connection, msg []byte) {
 			RoomID:    roomNumber,
 		}
 
-		b, err := json.Marshal(msg)
+		b, err := json.Marshal(&msg)
 		if err != nil {
 			c.log.Error(err)
 			return
@@ -125,7 +125,7 @@ func (c *WSConnectorImpl) onEventMessage(conn Connection, msg []byte) {
 			RoomID:    sendToFront.RoomId,
 		}
 
-		b, err = json.Marshal(msg)
+		b, err = json.Marshal(&msg)
 		if err != nil {
 			c.log.Error(err)
 			return
@@ -315,7 +315,7 @@ func (c *WSConnectorImpl) onEventMessage(conn Connection, msg []byte) {
 			RoomID:    sendToFront.RoomId,
 		}
 
-		b, err = json.Marshal(msg)
+		b, err = json.Marshal(&msg)
 		if err != nil {
 			c.log.Error(err)
 			return

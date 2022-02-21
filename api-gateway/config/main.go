@@ -1,7 +1,6 @@
 package config
 
 import (
-	"net/url"
 	"sync"
 
 	"github.com/caarlos0/env"
@@ -14,7 +13,7 @@ type Config struct {
 	RabbitMQUrl string `env:"RABBIT_MQ_URL" envDefault:"amqp://guest:guest@localhost:5672/"`
 
 	DefaltLimit  int64 `env:"DEFALT_LIMIT" envDefault:"100"`
-	DefaltOffset int64 `env:"DEFALT_LIMIT" envDefault:"0"`
+	DefaltOffset int64 `env:"DEFALT_OFFSET" envDefault:"0"`
 
 	UserServiceName    string `env:"USER_SERVICE_NAME" envDefault:"user-service"`
 	AuthServiceName    string `env:"AUTH_SERVICE_NAME" envDefault:"auth-service"`
@@ -33,18 +32,18 @@ type Config struct {
 	Immediate bool `env:"IMMEDIATE" envDefault:"false"`
 
 	//& Send Queue
-	SendName             string `env:"NAME" envDefault:"messages"`
-	SendDurable          bool   `env:"DURABLE" envDefault:"false"`
-	SendDeleteWhenUnused bool   `env:"DELETE_WHEN_UNUSED" envDefault:"false"`
-	SendQueueExclusive   bool   `env:"QUEUE_EXCLUSIVE" envDefault:"true"`
-	SendQueueNoWait      bool   `env:"QUEUE_NO_WAIT" envDefault:"false"`
+	SendName             string `env:"SEND_NAME" envDefault:"messages"`
+	SendDurable          bool   `env:"SEND_DURABLE" envDefault:"false"`
+	SendDeleteWhenUnused bool   `env:"SEND_DELETE_WHEN_UNUSED" envDefault:"false"`
+	SendQueueExclusive   bool   `env:"SEND_QUEUE_EXCLUSIVE" envDefault:"true"`
+	SendQueueNoWait      bool   `env:"SEND_QUEUE_NO_WAIT" envDefault:"false"`
 
 	//& Receive Queue
-	ReceiveName             string `env:"NAME" envDefault:"messages"`
-	ReceiveDurable          bool   `env:"DURABLE" envDefault:"false"`
-	ReceiveDeleteWhenUnused bool   `env:"DELETE_WHEN_UNUSED" envDefault:"false"`
-	ReceiveQueueExclusive   bool   `env:"QUEUE_EXCLUSIVE" envDefault:"true"`
-	ReceiveQueueNoWait      bool   `env:"QUEUE_NO_WAIT" envDefault:"false"`
+	ReceiveName             string `env:"RECEIVE_NAME"`
+	ReceiveDurable          bool   `env:"RECEIVE_DURABLE" envDefault:"false"`
+	ReceiveDeleteWhenUnused bool   `env:"RECEIVE_DELETE_WHEN_UNUSED" envDefault:"false"`
+	ReceiveQueueExclusive   bool   `env:"RECEIVE_QUEUE_EXCLUSIVE" envDefault:"true"`
+	ReceiveQueueNoWait      bool   `env:"RECEIVE_QUEUE_NO_WAIT" envDefault:"false"`
 
 	//& ExchangeDeclare
 	Exchange        string `env:"EXCHANGE" envDefault:"messages-gateway"`
@@ -53,13 +52,6 @@ type Config struct {
 	AutoDelete      bool   `env:"AUTO_DELETE" envDefault:"false"`
 	Internal        bool   `env:"INTERNAL" envDefault:"false"`
 	ExchangeNoWait  bool   `env:"EXCHANGE_NO_WAIT" envDefault:"false"`
-}
-
-func (c *Config) ServerAddress() *url.URL {
-	return &url.URL{
-		Scheme: "http",
-		Host:   c.Addr,
-	}
 }
 
 var (

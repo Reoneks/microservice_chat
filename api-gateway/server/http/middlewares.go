@@ -64,7 +64,9 @@ func Authorization(auth proto.AuthService) echo.MiddlewareFunc {
 
 			authResp, err := auth.AuthHandler(context.Background(), &data)
 			if err != nil {
-				return ctx.JSON(http.StatusInternalServerError, err)
+				return ctx.String(http.StatusInternalServerError, err.Error())
+			} else if !authResp.Status.Ok {
+				return ctx.String(http.StatusUnauthorized, authResp.Status.Error)
 			}
 
 			ctx.Set("user_id", authResp.UserID)

@@ -35,7 +35,7 @@ func (u *RoomMicroservice) GetRooms(ctx echo.Context) error {
 		UserID: ctx.Get("user_id").(string),
 	})
 	if err != nil {
-		return ctx.NoContent(http.StatusInternalServerError)
+		return ctx.String(http.StatusInternalServerError, err.Error())
 	} else if !rsp.Status.Ok {
 		return ctx.String(http.StatusInternalServerError, rsp.Status.Error)
 	}
@@ -43,7 +43,7 @@ func (u *RoomMicroservice) GetRooms(ctx echo.Context) error {
 	var resp model.PaginationRoomsResponse
 	err = json.Unmarshal(rsp.Room, &resp.Rooms)
 	if err != nil {
-		return ctx.NoContent(http.StatusInternalServerError)
+		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
 	resp.Limit = limit
@@ -55,9 +55,10 @@ func (u *RoomMicroservice) GetRooms(ctx echo.Context) error {
 func (u *RoomMicroservice) CreateRoom(ctx echo.Context) error {
 	var room map[string]interface{}
 	if err := ctx.Bind(&room); err != nil {
-		return ctx.NoContent(http.StatusBadRequest)
+		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 
+	room["created_by"] = ctx.Get("user_id").(string)
 	var (
 		req proto.RoomStruct
 		err error
@@ -65,12 +66,12 @@ func (u *RoomMicroservice) CreateRoom(ctx echo.Context) error {
 
 	req.RoomInfo, err = json.Marshal(&room)
 	if err != nil {
-		return ctx.NoContent(http.StatusInternalServerError)
+		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
 	rsp, err := u.room.CreateRoom(context.Background(), &req)
 	if err != nil {
-		return ctx.NoContent(http.StatusInternalServerError)
+		return ctx.String(http.StatusInternalServerError, err.Error())
 	} else if !rsp.Status.Ok {
 		return ctx.String(http.StatusInternalServerError, rsp.Status.Error)
 	}
@@ -78,7 +79,7 @@ func (u *RoomMicroservice) CreateRoom(ctx echo.Context) error {
 	var resp map[string]interface{}
 	err = json.Unmarshal(rsp.Room, &resp)
 	if err != nil {
-		return ctx.NoContent(http.StatusInternalServerError)
+		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
 	return ctx.JSON(http.StatusOK, resp)

@@ -60,7 +60,7 @@ func (r *RoomUsersRepositoryImpl) GetRoomsByUserId(id string, limit, offset int6
 
 	rcur, err := r.roomsCollection.Find(r.ctx, bson.M{"_id": bson.M{"$in": IDs}}, opts)
 	if err != nil {
-		return nil, fmt.Errorf("Find error:\n\t%v", err)
+		return nil, fmt.Errorf("Find error:\n\t%v; IDS: %v", err, IDs)
 	}
 
 	defer rcur.Close(r.ctx)
