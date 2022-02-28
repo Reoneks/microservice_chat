@@ -25,5 +25,4 @@
 vendor/
 tmp/
 .env
-.prometheus_data
-.grafana
+workspace.code-workspace
