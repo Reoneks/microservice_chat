@@ -46,10 +46,10 @@ func main() {
 	room := proto.NewRoomsService(cfg.RoomServiceName, roomService.Client())
 	messages := proto.NewMessagesService(cfg.MessageServiceName, messagesService.Client())
 
-	authMicroservice := clients.NewAuthMicroservice(auth)
-	userMicroservice := clients.NewUserMicroservice(user, auth)
-	roomMicroservice := clients.NewRoomMicroservice(room, cfg.DefaltLimit, cfg.DefaltOffset)
-	messagesMicroservice := clients.NewMessagesMicroservice(messages, cfg.DefaltLimit, cfg.DefaltOffset)
+	authMicroservice := clients.NewAuthMicroservice(auth, cfg.AuthServiceADDR)
+	userMicroservice := clients.NewUserMicroservice(user, auth, cfg.UserServiceADDR, cfg.AuthServiceADDR)
+	roomMicroservice := clients.NewRoomMicroservice(room, cfg.DefaltLimit, cfg.DefaltOffset, cfg.RoomServiceADDR)
+	messagesMicroservice := clients.NewMessagesMicroservice(messages, cfg.DefaltLimit, cfg.DefaltOffset, cfg.MessageServiceADDR)
 
 	amqp := config.GetAMQP(&cfg, nil, nil, nil)
 	ch, err := config.StartRabbitMQ(cfg.RabbitMQUrl)

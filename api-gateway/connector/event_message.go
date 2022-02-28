@@ -24,7 +24,7 @@ const (
 )
 
 type EventMessage struct {
-	Type EventType   `json:"type"`
+	Type EventType   `json:"request_type"`
 	Data interface{} `json:"data"`
 }
 
@@ -59,32 +59,12 @@ func (c *WSConnectorImpl) onEventMessage(conn Connection, msg []byte) {
 		room := *c.rooms[roomNumber]
 		room.AddConnection(conn)
 
-		msg := proto.RabbitMessage{
-			Message:   []byte(roomNumber),
-			EventType: int64(SubscribeEventType),
-			RoomID:    roomNumber,
+		msg := EventMessage{
+			Type: SubscribeEventType,
+			Data: roomNumber,
 		}
 
-		b, err := json.Marshal(&msg)
-		if err != nil {
-			c.log.Error(err)
-			return
-		}
-
-		err = c.ch.Publish(
-			c.exchange,
-			"",
-			c.mandatory,
-			c.immediate,
-			amqp.Publishing{
-				ContentType: "application/json",
-				Body:        b,
-			},
-		)
-		if err != nil {
-			c.log.Error(err)
-			return
-		}
+		c.SendMessageByRoom(roomNumber, msg)
 	//! //////////////////////////////////
 	case UnSubscribeRoomEventType:
 		data := struct {
@@ -113,38 +93,12 @@ func (c *WSConnectorImpl) onEventMessage(conn Connection, msg []byte) {
 			UserId: conn.GetUserID(),
 		}
 
-		b, err := json.Marshal(sendToFront)
-		if err != nil {
-			c.log.Error(err)
-			return
+		msg := EventMessage{
+			Type: SubscribeEventType,
+			Data: sendToFront,
 		}
 
-		msg := proto.RabbitMessage{
-			Message:   b,
-			EventType: int64(UnSubscribeRoomEventType),
-			RoomID:    sendToFront.RoomId,
-		}
-
-		b, err = json.Marshal(&msg)
-		if err != nil {
-			c.log.Error(err)
-			return
-		}
-
-		err = c.ch.Publish(
-			c.exchange,
-			"",
-			c.mandatory,
-			c.immediate,
-			amqp.Publishing{
-				ContentType: "application/json",
-				Body:        b,
-			},
-		)
-		if err != nil {
-			c.log.Error(err)
-			return
-		}
+		c.SendMessageByRoom(roomNumber, msg)
 	//! //////////////////////////////////
 	case NewMessageEventType:
 		data := struct {

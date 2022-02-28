@@ -153,7 +153,7 @@
     })()
 
     function onWritingMessage(user) {
-      if (user.id === userID) {
+      if (user.user === userID) {
         return;
       }
 
@@ -248,9 +248,6 @@
       if (e) { e.preventDefault() }
 
       let messageID, requestType, data = {};
-      if (attachments.files.length) {
-        messageID = await uploadFiles(attachments.files);
-      }
       if (messageID) {
         requestType = EditMessageEventType
         data = {
@@ -262,7 +259,6 @@
 
       data.text = msgInput.value;
       data.quote_message_id = null;
-      $(".emojionearea-editor").html('');
       msgInput.value = "";
 
       conn.send(JSON.stringify({
@@ -273,135 +269,81 @@
 
     function addMessageDOM(msg) {
       msg = msg.message !== undefined ? msg.message : msg
-      const { created_at, creator_id } = msg;
+      const { created_at, created_by } = msg;
       const newMsg = document.createElement("div");
 
       newMsg.id = msg.id;
-      if (userID === creator_id) {
+      if (userID === created_by) {
         newMsg.style = "display: flex; flex-direction: row-reverse;";
       } else {
         newMsg.style = "display: flex; flex-direction: row;";
       }
 
-      if (msg.media_files.length != 0) {
-        Array.from(msg.media_files).forEach(file => {
-          if(file.type == 'audio'){
-            const msgText = document.createElement("audio");
-            msgText.id = `msg-text-${msg.id}`
-            msgText.controls = 'controls';
-            msgText.src = link + file.file_name;
-            msgText.type = 'audio/mpeg';
-            newMsg.appendChild(msgText);
-          } else if (file.type == 'video'){
-            const msgText = document.createElement("video");
-            msgText.id = `msg-text-${msg.id}`
-            msgText.controls = 'controls';
-            msgText.src = link + file.file_name;
-            msgText.type = 'audio/mpeg';
-            newMsg.appendChild(msgText);
-          } else if (file.type == 'image'){
-            const msgText = document.createElement('img');
-            msgText.src = link + (file.preview_file_name != undefined ? file.preview_file_name : file.file_name);
-            msgText.id = `msg-text-${msg.id}`
-            newMsg.appendChild(msgText);
-          } else {
-            const a = document.createElement('a');
-            a.href = link + file.file_name;
+      const msgText = document.createElement("div");
+      msgText.id = `msg-text-${msg.id}`
+      msgText.textContent = created_at + " " + msg.text;
 
-            const controlBlock = document.createElement('div');
-            controlBlock.style = "margin-left: 5px;"
+      if (userID === created_by) {
+        const controlBlock = document.createElement('div');
+        controlBlock.style = "margin-left: 5px;"
 
-            const leftEl = document.createElement('span');
-            leftEl.textContent = "(";
-            controlBlock.appendChild(leftEl);
+        const leftEl = document.createElement('span');
+        leftEl.textContent = "(";
+        controlBlock.appendChild(leftEl);
 
-            const deleteEl = document.createElement('span');
-            deleteEl.textContent = "delete";
-            deleteEl.style = "text-decoration: underline; cursor: pointer;"
-            deleteEl.onclick = () => onDeleteMessage(msg.id);
-            controlBlock.appendChild(deleteEl);
+        const editEl = document.createElement('span');
+        const editBtnEl = document.createElement("span")
+        editBtnEl.textContent = "edit";
+        editBtnEl.style = "text-decoration: underline; cursor: pointer;"
 
-            const rightEl = document.createElement('span');
-            rightEl.textContent = ")";
-            controlBlock.appendChild(rightEl);
+        const editInputEl = document.createElement("input");
+        editInputEl.style.display = "none";
 
-            newMsg.appendChild(controlBlock);
+        editBtnEl.onclick = function () {
+          editBtnEl.style.display = "none";
+          editInputEl.style.display = "inline-block";
+          editInputEl.focus();
+        };
 
-            const msgText = document.createTextNode(file.name);
-            msgText.id = `msg-text-${msg.id}`
-            a.appendChild(msgText);
-
-            newMsg.appendChild(a);
-            const msgText1 = document.createTextNode(created_at + "\u00A0");
-            newMsg.appendChild(msgText1);
+        editInputEl.addEventListener("keyup", (event) => {
+          if (event.keyCode === 13) {
+            event.preventDefault();
+            onSaveMessage(msg.id, editInputEl.value);
+            editBtnEl.style.display = "inline-block";
+            editInputEl.style.display = "none";
+            editInputEl.value = "";
           }
-        })
-      } else {
-        const msgText = document.createElement("div");
-        msgText.id = `msg-text-${msg.id}`
-        msgText.textContent = created_at + " " + msg.text + ` (${msg.media_files.length} attached)`;
 
-        if (userID === creator_id) {
-          const controlBlock = document.createElement('div');
-          controlBlock.style = "margin-left: 5px;"
+          if (event.keyCode === 27) {
+            event.preventDefault();
+            editBtnEl.style.display = "inline-block";
+            editInputEl.style.display = "none";
+            editInputEl.value = "";
+          }
+        });
 
-          const leftEl = document.createElement('span');
-          leftEl.textContent = "(";
-          controlBlock.appendChild(leftEl);
+        editEl.appendChild(editBtnEl);
+        editEl.appendChild(editInputEl);
+        controlBlock.appendChild(editEl);
 
-          const editEl = document.createElement('span');
-          const editBtnEl = document.createElement("span")
-          editBtnEl.textContent = "edit";
-          editBtnEl.style = "text-decoration: underline; cursor: pointer;"
+        const separator = document.createElement('span');
+        separator.textContent = "|";
+        controlBlock.appendChild(separator);
 
-          const editInputEl = document.createElement("input");
-          editInputEl.style.display = "none";
+        const deleteEl = document.createElement('span');
+        deleteEl.textContent = "delete";
+        deleteEl.style = "text-decoration: underline; cursor: pointer;"
+        deleteEl.onclick = () => onDeleteMessage(msg.id);
+        controlBlock.appendChild(deleteEl);
 
-          editBtnEl.onclick = function () {
-            editBtnEl.style.display = "none";
-            editInputEl.style.display = "inline-block";
-            editInputEl.focus();
-          };
+        const rightEl = document.createElement('span');
+        rightEl.textContent = ")";
+        controlBlock.appendChild(rightEl);
 
-          editInputEl.addEventListener("keyup", (event) => {
-            if (event.keyCode === 13) {
-              event.preventDefault();
-              onSaveMessage(msg.id, editInputEl.value);
-              editBtnEl.style.display = "inline-block";
-              editInputEl.style.display = "none";
-              editInputEl.value = "";
-            }
-
-            if (event.keyCode === 27) {
-              event.preventDefault();
-              editBtnEl.style.display = "inline-block";
-              editInputEl.style.display = "none";
-              editInputEl.value = "";
-            }
-          });
-
-          editEl.appendChild(editBtnEl);
-          editEl.appendChild(editInputEl);
-          controlBlock.appendChild(editEl);
-
-          const separator = document.createElement('span');
-          separator.textContent = "|";
-          controlBlock.appendChild(separator);
-
-          const deleteEl = document.createElement('span');
-          deleteEl.textContent = "delete";
-          deleteEl.style = "text-decoration: underline; cursor: pointer;"
-          deleteEl.onclick = () => onDeleteMessage(msg.id);
-          controlBlock.appendChild(deleteEl);
-
-          const rightEl = document.createElement('span');
-          rightEl.textContent = ")";
-          controlBlock.appendChild(rightEl);
-
-          newMsg.appendChild(controlBlock);
-        }
-        newMsg.appendChild(msgText);
+        newMsg.appendChild(controlBlock);
       }
+      newMsg.appendChild(msgText);
+
 
       messages.insertBefore(newMsg, messages.childNodes[0]);
       messages.scroll({ top: 0 })
@@ -438,12 +380,12 @@
 
       conn.onmessage = async function (evt) {
         const response = JSON.parse(evt.data);
-        switch (response.response_type) {
+        switch (response.request_type) {
           case NewMessageEventType:
-            if (response.data.message.room_id == currentRoom.id){
+            if (response.data.room_id == currentRoom.id){
               addMessageDOM(response.data);
             }
-            if (userID !== response.data.message.creator_id) {
+            if (userID !== response.data.created_by) {
               beep();
             }
 
@@ -625,7 +567,7 @@
 
     async function leaveRoom(room_id) {
       await disconnect();
-      await fetch(`${apiURL}/client/rooms/${room_id}/users/`, {
+      await fetch(`${apiURL}/client/rooms/${room_id}/users`, {
         headers: getHeaders(),
         method: "DELETE",
         body: JSON.stringify({

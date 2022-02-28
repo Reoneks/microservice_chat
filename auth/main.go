@@ -22,10 +22,10 @@ func main() {
 	authRepository := auth.NewAuthRepository(db, cfg.DBName, cfg.Collection)
 	authService := auth.NewAuthService(authRepository, jwt)
 
-	authMicroService := micro.NewService(micro.Name(cfg.ServiceName), micro.Address(cfg.MicroServiceAddress))
-	authMicroService.Init()
 	userService := micro.NewService(micro.Address(cfg.UserServiceADDR))
 	userService.Init()
+	authMicroService := micro.NewService(micro.Name(cfg.ServiceName), micro.Address(cfg.MicroServiceAddress))
+	authMicroService.Init()
 
 	err = proto.RegisterAuthServiceHandler(
 		authMicroService.Server(),

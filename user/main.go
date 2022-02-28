@@ -18,7 +18,7 @@ func main() {
 
 	userRep := user.NewUserRepository(db, cfg.DBName, cfg.Collection)
 	userService := user.NewUserService(userRep)
-	microService := micro.NewService(micro.Name(cfg.ServiceName))
+	microService := micro.NewService(micro.Name(cfg.ServiceName), micro.Address(cfg.MicroServiceAddress))
 	microService.Init()
 	if err := proto.RegisterUserHandler(microService.Server(), &user.UserMicro{UserService: userService}); err != nil {
 		panic(err)

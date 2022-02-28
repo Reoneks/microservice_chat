@@ -61,9 +61,7 @@ func NewMessagesMicro(
 	}
 }
 
-func (u *messagesMicro) publish(data []byte, msg *proto.RabbitMessage) error {
-	msg.Message = data
-
+func (u *messagesMicro) publish(msg *proto.RabbitMessage) error {
 	bytes, err := json.Marshal(msg)
 	if err != nil {
 		return err
@@ -98,7 +96,8 @@ func (u *messagesMicro) createMessage(data *proto.RabbitMessage) error {
 		return err
 	}
 
-	return u.publish(bytes, data)
+	data.Message = bytes
+	return u.publish(data)
 }
 
 func (u *messagesMicro) updateMessage(data *proto.RabbitMessage) error {
@@ -118,7 +117,8 @@ func (u *messagesMicro) updateMessage(data *proto.RabbitMessage) error {
 		return err
 	}
 
-	return u.publish(bytes, data)
+	data.Message = bytes
+	return u.publish(data)
 }
 
 func (u *messagesMicro) deleteMessage(data *proto.RabbitMessage) error {
@@ -127,7 +127,7 @@ func (u *messagesMicro) deleteMessage(data *proto.RabbitMessage) error {
 		return err
 	}
 
-	return u.publish(nil, data)
+	return u.publish(data)
 }
 
 func (u *messagesMicro) StartConsumer() error {
@@ -149,7 +149,7 @@ func (u *messagesMicro) StartConsumer() error {
 
 		err := json.Unmarshal(message.Body, &data)
 		if err != nil {
-			log.Println("Unmarshal RabbitMessage error: ", err)
+			log.Printf("Unmarshal RabbitMessage error: %v", err)
 		}
 
 		switch data.MessageType {
@@ -157,7 +157,7 @@ func (u *messagesMicro) StartConsumer() error {
 			var msg map[string]interface{}
 			err = json.Unmarshal(data.Message, &msg)
 			if err != nil {
-				log.Println("Unmarshal msg error: ", err)
+				log.Printf("Unmarshal msg error: %v", err)
 			}
 
 			err := u.createMessage(&data)

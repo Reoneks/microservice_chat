@@ -19,7 +19,7 @@ func main() {
 	roomUserRep := room.NewRoomUsersRepository(db, cfg.DBName, cfg.RoomUserCollection, cfg.RoomCollection)
 
 	roomService := room.NewRoomService(roomRep, roomUserRep)
-	microService := micro.NewService(micro.Name(cfg.ServiceName))
+	microService := micro.NewService(micro.Name(cfg.ServiceName), micro.Address(cfg.MicroServiceAddress))
 	microService.Init()
 
 	if err := proto.RegisterRoomsHandler(microService.Server(), &room.RoomsMicro{RoomService: roomService}); err != nil {

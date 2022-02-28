@@ -7,6 +7,7 @@ import (
 
 	"github.com/Reoneks/microservice_chat/proto"
 
+	"github.com/asim/go-micro/v3/client"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -62,7 +63,7 @@ func Authorization(auth proto.AuthService) echo.MiddlewareFunc {
 				return ctx.NoContent(http.StatusUnauthorized)
 			}
 
-			authResp, err := auth.AuthHandler(context.Background(), &data)
+			authResp, err := auth.AuthHandler(context.Background(), &data, client.WithAddress("127.0.0.1:16565"))
 			if err != nil {
 				return ctx.String(http.StatusInternalServerError, err.Error())
 			} else if !authResp.Status.Ok {

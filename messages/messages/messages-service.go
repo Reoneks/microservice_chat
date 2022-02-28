@@ -37,7 +37,19 @@ func (us *messagesService) CreateMessage(message map[string]interface{}) (map[st
 }
 
 func (us *messagesService) UpdateMessage(message map[string]interface{}) (map[string]interface{}, error) {
-	return us.messagesService.UpdateMessage(message)
+	_, err := us.messagesService.UpdateMessage(message)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := us.messagesService.GetMessageByID(message["_id"].(string))
+	if err != nil {
+		return nil, err
+	}
+
+	result["id"] = result["_id"]
+	delete(result, "_id")
+	return result, nil
 }
 
 func (us *messagesService) DeleteMessage(id string) error {

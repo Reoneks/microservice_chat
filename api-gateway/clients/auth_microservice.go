@@ -5,17 +5,20 @@ import (
 	"net/http"
 
 	"github.com/Reoneks/microservice_chat/proto"
+	"github.com/asim/go-micro/v3/client"
 
 	"github.com/labstack/echo/v4"
 )
 
 type AuthMicroservice struct {
-	auth proto.AuthService
+	auth     proto.AuthService
+	authAddr string
 }
 
-func NewAuthMicroservice(auth proto.AuthService) *AuthMicroservice {
+func NewAuthMicroservice(auth proto.AuthService, authAddr string) *AuthMicroservice {
 	return &AuthMicroservice{
-		auth: auth,
+		auth:     auth,
+		authAddr: authAddr,
 	}
 }
 
@@ -25,7 +28,7 @@ func (a *AuthMicroservice) Register(ctx echo.Context) error {
 		return ctx.NoContent(http.StatusBadRequest)
 	}
 
-	rsp, err := a.auth.Registration(context.Background(), &req)
+	rsp, err := a.auth.Registration(context.Background(), &req, client.WithAddress(a.authAddr))
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	} else if rsp.Token == "" {
@@ -41,7 +44,7 @@ func (a *AuthMicroservice) Login(ctx echo.Context) error {
 		return ctx.NoContent(http.StatusBadRequest)
 	}
 
-	rsp, err := a.auth.LoginHandler(context.Background(), &req)
+	rsp, err := a.auth.LoginHandler(context.Background(), &req, client.WithAddress(a.authAddr))
 	if err != nil {
 		return ctx.NoContent(http.StatusInternalServerError)
 	} else if rsp.Token == "" {

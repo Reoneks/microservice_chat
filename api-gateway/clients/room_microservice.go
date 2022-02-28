@@ -8,12 +8,14 @@ import (
 
 	"github.com/Reoneks/microservice_chat/api-gateway/model"
 	"github.com/Reoneks/microservice_chat/proto"
+	"github.com/asim/go-micro/v3/client"
 
 	"github.com/labstack/echo/v4"
 )
 
 type RoomMicroservice struct {
 	room         proto.RoomsService
+	roomAddr     string
 	DefaltLimit  int64
 	DefaltOffset int64
 }
@@ -33,7 +35,7 @@ func (u *RoomMicroservice) GetRooms(ctx echo.Context) error {
 		Limit:  limit,
 		Offset: offset,
 		UserID: ctx.Get("user_id").(string),
-	})
+	}, client.WithAddress(u.roomAddr))
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	} else if !rsp.Status.Ok {
@@ -69,7 +71,7 @@ func (u *RoomMicroservice) CreateRoom(ctx echo.Context) error {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	rsp, err := u.room.CreateRoom(context.Background(), &req)
+	rsp, err := u.room.CreateRoom(context.Background(), &req, client.WithAddress(u.roomAddr))
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	} else if !rsp.Status.Ok {
@@ -100,7 +102,7 @@ func (u *RoomMicroservice) UpdateRoom(ctx echo.Context) error {
 	data.Room = roomInfo
 	data.RoomID = ctx.Param("id")
 
-	rsp, err := u.room.UpdateRoom(context.Background(), &data)
+	rsp, err := u.room.UpdateRoom(context.Background(), &data, client.WithAddress(u.roomAddr))
 	if err != nil {
 		return ctx.NoContent(http.StatusInternalServerError)
 	} else if !rsp.Status.Ok {
@@ -120,7 +122,7 @@ func (u *RoomMicroservice) DeleteRoom(ctx echo.Context) error {
 	var room proto.DeleteRequest
 	room.RoomID = ctx.Param("id")
 
-	rsp, err := u.room.DeleteRoom(context.Background(), &room)
+	rsp, err := u.room.DeleteRoom(context.Background(), &room, client.WithAddress(u.roomAddr))
 	if err != nil {
 		return ctx.NoContent(http.StatusInternalServerError)
 	} else if !rsp.Ok {
@@ -140,7 +142,7 @@ func (u *RoomMicroservice) AddUsers(ctx echo.Context) error {
 	req.UserIDs = userIDs.UserIDs
 	req.RoomID = ctx.Param("id")
 
-	rsp, err := u.room.AddUsers(context.Background(), &req)
+	rsp, err := u.room.AddUsers(context.Background(), &req, client.WithAddress(u.roomAddr))
 	if err != nil {
 		return ctx.NoContent(http.StatusInternalServerError)
 	} else if !rsp.Ok {
@@ -160,7 +162,7 @@ func (u *RoomMicroservice) DeleteUsers(ctx echo.Context) error {
 	req.UserIDs = userIDs.UserIDs
 	req.RoomID = ctx.Param("id")
 
-	rsp, err := u.room.DeleteUsers(context.Background(), &req)
+	rsp, err := u.room.DeleteUsers(context.Background(), &req, client.WithAddress(u.roomAddr))
 	if err != nil {
 		return ctx.NoContent(http.StatusInternalServerError)
 	} else if !rsp.Ok {
@@ -170,10 +172,11 @@ func (u *RoomMicroservice) DeleteUsers(ctx echo.Context) error {
 	return ctx.NoContent(http.StatusNoContent)
 }
 
-func NewRoomMicroservice(room proto.RoomsService, DefaltLimit, DefaltOffset int64) *RoomMicroservice {
+func NewRoomMicroservice(room proto.RoomsService, DefaltLimit, DefaltOffset int64, roomAddr string) *RoomMicroservice {
 	return &RoomMicroservice{
 		room:         room,
 		DefaltLimit:  DefaltLimit,
 		DefaltOffset: DefaltOffset,
+		roomAddr:     roomAddr,
 	}
 }

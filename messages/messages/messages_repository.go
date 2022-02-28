@@ -14,6 +14,7 @@ import (
 
 type MessagesRepository interface {
 	GetMessagesByRoom(roomID string, limit, offset int64) ([]map[string]interface{}, error)
+	GetMessageByID(id string) (map[string]interface{}, error)
 	CreateMessage(message map[string]interface{}) (map[string]interface{}, error)
 	UpdateMessage(message map[string]interface{}) (map[string]interface{}, error)
 	DeleteMessage(id string) error
@@ -26,8 +27,7 @@ type MessagesRepositoryImpl struct {
 
 func (r *MessagesRepositoryImpl) GetMessagesByRoom(roomID string, limit, offset int64) ([]map[string]interface{}, error) {
 	findOptions := options.Find()
-	findOptions.SetLimit(limit)
-	findOptions.SetSkip(offset)
+	findOptions.SetLimit(limit).SetSkip(offset).SetSort(bson.M{"updated_at": -1})
 
 	cur, err := r.messagesCollection.Find(r.ctx, bson.M{"room_id": roomID}, findOptions)
 	if err != nil {
@@ -54,6 +54,16 @@ func (r *MessagesRepositoryImpl) GetMessagesByRoom(roomID string, limit, offset 
 	}
 
 	return results, nil
+}
+
+func (r *MessagesRepositoryImpl) GetMessageByID(id string) (map[string]interface{}, error) {
+	message := make(bson.M)
+	err := r.messagesCollection.FindOne(r.ctx, bson.M{"_id": id}).Decode(&message)
+	if err != nil {
+		return nil, fmt.Errorf("CreateMessage error:\n\t%v", err)
+	}
+
+	return message, nil
 }
 
 func (r *MessagesRepositoryImpl) CreateMessage(message map[string]interface{}) (map[string]interface{}, error) {

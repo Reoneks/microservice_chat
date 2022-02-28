@@ -53,7 +53,7 @@ func (c *WSConnectorImpl) connect(conn Connection) {
 	if err != nil {
 		c.log.Error(err)
 	}
-	go c.listen(conn)
+	c.listen(conn)
 }
 
 func (c *WSConnectorImpl) disconnect(conn Connection) {
@@ -66,12 +66,14 @@ func (c *WSConnectorImpl) disconnect(conn Connection) {
 }
 
 func (c *WSConnectorImpl) listen(conn Connection) {
+loop:
 	for {
 		select {
 		case msg := <-conn.GetMessageChan():
 			c.onEventMessage(conn, msg)
 		case <-conn.GetDisconnectChan():
 			c.disconnect(conn)
+			break loop
 		case msg := <-c.msgs:
 			var message proto.RabbitMessage
 
@@ -81,16 +83,24 @@ func (c *WSConnectorImpl) listen(conn Connection) {
 				continue
 			}
 
-			msgData := make(map[string]interface{})
-			err = json.Unmarshal(message.Message, &msgData)
-			if err != nil {
-				c.log.Error(err)
-				continue
-			}
+			var messageE EventMessage
+			if message.EventType != int64(DeleteMessageEventType) {
+				msgData := make(map[string]interface{})
+				err = json.Unmarshal(message.Message, &msgData)
+				if err != nil {
+					c.log.Error(err)
+					continue
+				}
 
-			messageE := EventMessage{
-				Type: EventType(message.EventType),
-				Data: msgData,
+				messageE = EventMessage{
+					Type: EventType(message.EventType),
+					Data: msgData,
+				}
+			} else {
+				messageE = EventMessage{
+					Type: EventType(message.EventType),
+					Data: map[string]interface{}{"id": string(message.Message)},
+				}
 			}
 
 			c.SendMessageByRoom(message.RoomID, messageE)
