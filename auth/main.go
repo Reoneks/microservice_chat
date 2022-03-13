@@ -33,6 +33,7 @@ func main() {
 			authService,
 			proto.NewUserService(cfg.UserServiceName, userService.Client()),
 			jwt,
+			cfg.UserServiceADDR,
 		),
 	)
 	if err != nil {

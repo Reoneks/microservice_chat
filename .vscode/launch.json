@@ -1,0 +1,63 @@
+{
+    // Используйте IntelliSense, чтобы узнать о возможных атрибутах.
+    // Наведите указатель мыши, чтобы просмотреть описания существующих атрибутов.
+    // Для получения дополнительной информации посетите: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Api-Gateway",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceRoot}/api-gateway",
+            "env": {},
+            "args": []
+        },
+        {
+            "name": "Auth",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceRoot}/auth",
+            "env": {},
+            "args": []
+        },
+        {
+            "name": "Messages",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceRoot}/messages",
+            "env": {},
+            "args": []
+        },
+        {
+            "name": "Room",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceRoot}/room",
+            "env": {},
+            "args": []
+        },
+        {
+            "name": "User",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceRoot}/user",
+            "env": {},
+            "args": []
+        }
+    ],
+    "compounds": [{
+        "name": "Launch All",
+        "configurations": [
+          "Api-Gateway",
+          "Auth",
+          "Messages",
+          "Room",
+          "User"
+        ]
+    }]
+}

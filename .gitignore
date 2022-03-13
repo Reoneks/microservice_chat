@@ -19,10 +19,9 @@
 
 # IDE config files
 .idea
-.vscode
 .DS_Store
 
 vendor/
 tmp/
 .env
-workspace.code-workspace
+*.code-workspace

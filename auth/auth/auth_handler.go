@@ -7,6 +7,7 @@ import (
 
 	"github.com/Reoneks/microservice_chat/auth/utils"
 	"github.com/Reoneks/microservice_chat/proto"
+	"github.com/asim/go-micro/v3/client"
 
 	"github.com/go-chi/jwtauth"
 )
@@ -20,13 +21,15 @@ type Auth struct {
 	authService AuthService
 	userService proto.UserService
 	jwt         *jwtauth.JWTAuth
+	userAddr    string
 }
 
-func NewAuth(authService AuthService, userService proto.UserService, jwt *jwtauth.JWTAuth) *Auth {
+func NewAuth(authService AuthService, userService proto.UserService, jwt *jwtauth.JWTAuth, userAddr string) *Auth {
 	return &Auth{
 		authService: authService,
 		userService: userService,
 		jwt:         jwt,
+		userAddr:    userAddr,
 	}
 }
 
@@ -93,7 +96,7 @@ func (a *Auth) LoginHandler(ctx context.Context, req *proto.LoginRequest, resp *
 func (a *Auth) Registration(ctx context.Context, req *proto.RegistrationRequest, resp *proto.Token) (err error) {
 	resp.Status = new(proto.Status)
 
-	userResp, err := a.userService.CreateUser(context.Background(), ToUser(req))
+	userResp, err := a.userService.CreateUser(context.Background(), ToUser(req), client.WithAddress(a.userAddr))
 	if err != nil {
 		resp.Status.Ok = false
 		resp.Status.Error = err.Error()
@@ -109,7 +112,7 @@ func (a *Auth) Registration(ctx context.Context, req *proto.RegistrationRequest,
 	}
 
 	user := make(map[string]interface{})
-	user["_id"] = userRespMap["_id"].(string)
+	user["_id"] = userRespMap["id"].(string)
 	user["email"] = req.Email
 	user["password"], err = utils.Encrypt(req.Password)
 	if err != nil {
